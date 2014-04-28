@@ -93,7 +93,7 @@ bintray {
 	publications = ['mavenJava']
 	pkg {
 		repo = 'maven'
-		name = 'b;ip'
+		name = 'Blip'
 		desc = 'A toolkit for reliable and efficient transfer of data in a multicast network'
 		licenses = ['MIT']
 		labels = ['Java', 'multicast', 'messaging', 'bus', 'distributed']
