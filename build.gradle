@@ -1,0 +1,101 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:0.3'
+    }
+}
+
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'jacoco'
+apply plugin: 'maven-publish'
+apply plugin: 'bintray'
+
+
+defaultTasks 'clean', 'build', 'jacocoTestReport'
+
+
+group = 'coyote'
+version = '0.0.1'
+
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'BLIP', 'Implementation-Version': version
+    }
+}
+
+
+// custom tasks for creating source/javadoc jars
+task sourcesJar(type: Jar, dependsOn: classes) {
+	classifier = 'sources'
+	from sourceSets.main.allSource
+}
+
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+	classifier = 'javadoc'
+	from javadoc.destinationDir
+}
+
+
+// add javadoc/source jar tasks as artifacts
+artifacts {
+	archives sourcesJar, javadocJar
+}
+
+
+repositories {
+
+	// Use our own repo for coyote libraries
+	jcenter{
+	  url 'http://dl.bintray.com/sdcote/maven'
+	}
+
+	// for everything else we use Maven
+	mavenCentral()
+}
+
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.+'
+    compile group: 'coyote', name: 'DataFrame', version: '0.0.1'
+}
+
+
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			if (plugins.hasPlugin('war')) {
+				from components.web
+			} else {
+				from components.java
+			}
+
+			artifact sourcesJar {
+				classifier "sources"
+			}
+
+			artifact javadocJar {
+				classifier "javadoc"
+			}
+		}
+	}
+}
+
+
+bintray {
+	user = bintrayUser
+	key = bintrayKey
+	publications = ['mavenJava']
+	pkg {
+		repo = 'maven'
+		name = 'b;ip'
+		desc = 'A toolkit for reliable and efficient transfer of data in a multicast network'
+		licenses = ['MIT']
+		labels = ['Java', 'multicast', 'messaging', 'bus', 'distributed']
+	}
+}

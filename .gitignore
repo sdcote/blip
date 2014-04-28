@@ -1,0 +1,43 @@
+# Directory Artifacts #
+#######################
+build/
+bin/
+.gradle/
+
+
+# Other Projects #
+##################
+csharp/
+doc/
+
+# Compiled Artifacts #
+######################
+*.class
+*.dll
+
+
+# Eclipse IDE Artifacts #
+#########################
+.classpath
+.project
+.settings/
+
+
+# Testing Results #
+###################
+*.log
+
+
+# Package Files #
+#################
+# it's better to unpack these files and commit the raw source
+# git has its own built in compression methods
+*.7z
+*.gz
+*.tgz
+*.iso
+*.jar
+*.war
+*.ear
+!gradle/wrapper/gradle-wrapper.jar
+/.nb-gradle/profiles/private/
