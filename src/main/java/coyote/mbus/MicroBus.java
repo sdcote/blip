@@ -18,6 +18,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import coyote.commons.DefaultLogAppender;
+import coyote.commons.LogAppender;
+import coyote.commons.StringUtil;
+import coyote.commons.UriUtil;
 import coyote.mbus.message.Message;
 import coyote.mbus.message.MessageAddress;
 import coyote.mbus.network.IpAddress;
@@ -31,10 +35,6 @@ import coyote.mbus.network.NetworkService;
 import coyote.mbus.network.NetworkServiceException;
 import coyote.mbus.network.OamMessage;
 import coyote.mbus.network.RemoteNode;
-import coyote.mbus.network.UriUtil;
-import coyote.mbus.util.DefaultLogAppender;
-import coyote.mbus.util.LogAppender;
-import coyote.mbus.util.StringUtil;
 
 
 /**

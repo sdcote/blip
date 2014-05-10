@@ -32,15 +32,16 @@ import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import coyote.commons.DefaultLogAppender;
+import coyote.commons.LogAppender;
+import coyote.commons.NullLogAppender;
+import coyote.commons.UriUtil;
 import coyote.dataframe.DataField;
 import coyote.mbus.MessageSink;
 import coyote.mbus.message.ClosureMessage;
 import coyote.mbus.message.Message;
 import coyote.mbus.message.MessageAddress;
 import coyote.mbus.message.MessageException;
-import coyote.mbus.util.DefaultLogAppender;
-import coyote.mbus.util.LogAppender;
-import coyote.mbus.util.NullLogAppender;
 import coyote.util.ByteUtil;
 
 

@@ -11,7 +11,7 @@
  */
 package coyote.mbus.message;
 
-import coyote.mbus.util.ChainedException;
+import coyote.commons.ChainedException;
 
 /**
  * Exception thrown when there is a problem with message operations.

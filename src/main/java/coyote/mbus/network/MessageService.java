@@ -23,10 +23,11 @@ import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.AbstractSelectableChannel;
 import java.util.HashMap;
 
+import coyote.commons.ChainedException;
+import coyote.commons.DefaultLogAppender;
+import coyote.commons.LogAppender;
+import coyote.commons.UriUtil;
 import coyote.mbus.MicroBus;
-import coyote.mbus.util.ChainedException;
-import coyote.mbus.util.DefaultLogAppender;
-import coyote.mbus.util.LogAppender;
 import coyote.util.ByteUtil;
 
 

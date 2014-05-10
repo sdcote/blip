@@ -14,7 +14,7 @@ package coyote.mbus.network;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
 
-import coyote.mbus.util.ChainedException;
+import coyote.commons.ChainedException;
 
 
 /**

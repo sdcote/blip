@@ -20,9 +20,9 @@ import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.util.ArrayList;
 
+import coyote.commons.LogAppender;
+import coyote.commons.NullLogAppender;
 import coyote.mbus.message.Message;
-import coyote.mbus.util.LogAppender;
-import coyote.mbus.util.NullLogAppender;
 
 
 /**

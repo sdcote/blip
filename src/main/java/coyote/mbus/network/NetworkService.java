@@ -24,8 +24,9 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.util.ArrayList;
 
-import coyote.mbus.util.LogAppender;
-import coyote.mbus.util.NullLogAppender;
+import coyote.commons.LogAppender;
+import coyote.commons.NullLogAppender;
+import coyote.commons.UriUtil;
 
 
 /**

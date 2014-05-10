@@ -17,13 +17,13 @@ import java.util.List;
 import java.util.UUID;
 import java.util.Vector;
 
+import coyote.commons.SegmentFilter;
 import coyote.mbus.MessageChannelListener;
 import coyote.mbus.MessageQueue;
 import coyote.mbus.MessageSink;
 import coyote.mbus.message.ClosureMessage;
 import coyote.mbus.message.Message;
 import coyote.mbus.message.MessageAddress;
-import coyote.mbus.util.SegmentFilter;
 
 
 /**
