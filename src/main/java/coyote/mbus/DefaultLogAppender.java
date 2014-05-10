@@ -9,11 +9,13 @@
  *   Stephan D. Cote 
  *      - Initial concept and initial implementation
  */
-package coyote.commons;
+package coyote.mbus;
 
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import coyote.commons.StringUtil;
 
 /**
  * 

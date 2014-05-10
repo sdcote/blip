@@ -18,8 +18,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import coyote.commons.DefaultLogAppender;
-import coyote.commons.LogAppender;
 import coyote.commons.StringUtil;
 import coyote.commons.UriUtil;
 import coyote.mbus.message.Message;

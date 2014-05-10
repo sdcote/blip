@@ -24,9 +24,9 @@ import java.nio.channels.spi.AbstractSelectableChannel;
 import java.util.HashMap;
 
 import coyote.commons.ChainedException;
-import coyote.commons.DefaultLogAppender;
-import coyote.commons.LogAppender;
 import coyote.commons.UriUtil;
+import coyote.mbus.DefaultLogAppender;
+import coyote.mbus.LogAppender;
 import coyote.mbus.MicroBus;
 import coyote.util.ByteUtil;
 

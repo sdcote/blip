@@ -9,7 +9,7 @@
  *   Stephan D. Cote 
  *      - Initial concept and initial implementation
  */
-package coyote.commons;
+package coyote.mbus;
 
 /**
  * Very simple interface to a logging object.
