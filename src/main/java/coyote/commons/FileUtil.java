@@ -9,7 +9,7 @@
  *   Stephan D. Cote 
  *      - Initial concept and implementation
  */
-package coyote.mbus.util;
+package coyote.commons;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;

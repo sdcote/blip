@@ -9,7 +9,7 @@
  *   Stephan D. Cote 
  *      - Initial concept and initial implementation
  */
-package coyote.mbus.util;
+package coyote.commons;
 
 
 /**
@@ -19,7 +19,7 @@ public class NullLogAppender implements LogAppender
 {
 
   /**
-   * @see coyote.mbus.util.LogAppender#append(java.lang.String)
+   * @see coyote.commons.LogAppender#append(java.lang.String)
    */
   @Override
   public void append( String message )
@@ -27,7 +27,7 @@ public class NullLogAppender implements LogAppender
   }
 
   /**
-   * @see coyote.mbus.util.LogAppender#isEnabled()
+   * @see coyote.commons.LogAppender#isEnabled()
    */
   @Override
   public boolean isEnabled()
@@ -36,7 +36,7 @@ public class NullLogAppender implements LogAppender
   }
 
   /**
-   * @see coyote.mbus.util.LogAppender#setEnabled(boolean)
+   * @see coyote.commons.LogAppender#setEnabled(boolean)
    */
   @Override
   public void setEnabled( boolean enabled )

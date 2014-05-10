@@ -9,7 +9,7 @@
  *   Stephan D. Cote 
  *      - Initial concept and initial implementation
  */
-package coyote.mbus.network;
+package coyote.commons;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
