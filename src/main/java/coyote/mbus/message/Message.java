@@ -14,10 +14,10 @@ package coyote.mbus.message;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
+import coyote.commons.ByteUtil;
 import coyote.dataframe.DataField;
 import coyote.dataframe.DataFrame;
 import coyote.mbus.network.MessageChannel;
-import coyote.util.ByteUtil;
 
 
 /**

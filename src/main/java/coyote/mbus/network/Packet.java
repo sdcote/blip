@@ -17,9 +17,9 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 
+import coyote.commons.ByteUtil;
 import coyote.mbus.message.Message;
 import coyote.mbus.message.MessageAddress;
-import coyote.util.ByteUtil;
 
 
 /**

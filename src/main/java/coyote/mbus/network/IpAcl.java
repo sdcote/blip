@@ -15,6 +15,10 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
+import coyote.commons.network.IpAddress;
+import coyote.commons.network.IpAddressException;
+import coyote.commons.network.IpNetwork;
+
 
 /**
  * Holder for an Access Control list.

@@ -21,7 +21,7 @@ import java.nio.channels.DatagramChannel;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import coyote.mbus.network.IpInterface;
+import coyote.commons.network.IpInterface;
 import coyote.mbus.network.Packet;
 
 

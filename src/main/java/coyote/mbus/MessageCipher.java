@@ -14,7 +14,7 @@ package coyote.mbus;
 import java.security.KeyException;
 import java.util.Date;
 
-import coyote.util.ByteUtil;
+import coyote.commons.ByteUtil;
 
 
 /**

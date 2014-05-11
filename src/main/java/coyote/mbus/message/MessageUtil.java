@@ -14,9 +14,9 @@ package coyote.mbus.message;
 import java.util.Calendar;
 import java.util.Date;
 
+import coyote.commons.ByteUtil;
 import coyote.commons.StringUtil;
 import coyote.dataframe.DataField;
-import coyote.util.ByteUtil;
 
 
 

@@ -17,11 +17,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import coyote.commons.network.IpAddress;
+import coyote.commons.network.IpAddressException;
+import coyote.commons.network.IpNetwork;
 import coyote.mbus.message.Message;
 import coyote.mbus.message.MessageException;
-import coyote.mbus.network.IpAddress;
-import coyote.mbus.network.IpAddressException;
-import coyote.mbus.network.IpNetwork;
 import coyote.mbus.network.MessageChannel;
 import coyote.mbus.network.MessageSession;
 
