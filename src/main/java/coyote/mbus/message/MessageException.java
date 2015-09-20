@@ -11,13 +11,10 @@
  */
 package coyote.mbus.message;
 
-import coyote.commons.ChainedException;
-
 /**
  * Exception thrown when there is a problem with message operations.
  */
-public final class MessageException extends ChainedException
-{
+public final class MessageException extends Exception {
 
   /**
    * 
@@ -30,8 +27,7 @@ public final class MessageException extends ChainedException
   /**
    * Constructor with no message.
    */
-  public MessageException()
-  {
+  public MessageException() {
     super();
   }
 
@@ -43,8 +39,7 @@ public final class MessageException extends ChainedException
    *
    * @param message The text of the message.
    */
-  public MessageException( final String message )
-  {
+  public MessageException( final String message ) {
     super( message );
   }
 
@@ -57,8 +52,7 @@ public final class MessageException extends ChainedException
    * @param message The text of the message.
    * @param excptn The throwable object (exception?) to nest in this exception
    */
-  public MessageException( final String message, final Throwable excptn )
-  {
+  public MessageException( final String message, final Throwable excptn ) {
     super( message, excptn );
   }
 
@@ -70,8 +64,7 @@ public final class MessageException extends ChainedException
    *
    * @param excptn The throwable object (exception?) to nest in this exception
    */
-  public MessageException( final Throwable excptn )
-  {
+  public MessageException( final Throwable excptn ) {
     super( excptn );
   }
 }

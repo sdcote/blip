@@ -33,6 +33,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import coyote.commons.ByteUtil;
+import coyote.commons.ExceptionUtil;
 import coyote.commons.NetUtil;
 import coyote.commons.UriUtil;
 import coyote.dataframe.DataField;
@@ -42,7 +43,6 @@ import coyote.mbus.NullLogAppender;
 import coyote.mbus.message.ClosureMessage;
 import coyote.mbus.message.Message;
 import coyote.mbus.message.MessageAddress;
-import coyote.mbus.message.MessageException;
 
 
 /**
@@ -51,8 +51,7 @@ import coyote.mbus.message.MessageException;
  * 
  * <p>Instance of this class runs in a NetworkService.</p>
  */
-public final class MessageBus implements NetworkServiceHandler, MessageMediator, MessageSink
-{
+public final class MessageBus implements NetworkServiceHandler, MessageMediator, MessageSink {
   /** Tag used in various class identifying locations like DataCapsule nodes */
   public final String CLASS_TAG = "MessageBus";
 
@@ -161,12 +160,10 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
    * @param channel
    * @param uri
    */
-  public MessageBus( final MessageChannel channel, final URI uri )
-  {
+  public MessageBus( final MessageChannel channel, final URI uri ) {
     super();
 
-    if( channel == null )
-    {
+    if ( channel == null ) {
       throw new IllegalArgumentException( "MessageChannel was null" );
     }
 
@@ -175,25 +172,17 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
     // All messages received via the message channel will be handled by this object
     MessageChannel.outSink = this;
 
-    try
-    {
+    try {
       // Make sure we have a complete URI, otherwise use the defaults
-      if( uri.getPort() < 1 )
-      {
-        if( uri.getHost() != null )
-        {
+      if ( uri.getPort() < 1 ) {
+        if ( uri.getHost() != null ) {
           // Scheme MUST be UDP so the handler will create a datagram service
           busUri = UriUtil.parse( "udp://" + uri.getHost() + ":" + MessageBus.DEFAULT_URI.getPort() );
         }
-      }
-      else
-      {
-        if( uri.getHost() != null )
-        {
+      } else {
+        if ( uri.getHost() != null ) {
           busUri = uri;
-        }
-        else
-        {
+        } else {
           throw new IllegalArgumentException( "No host in URI" );
         }
       }
@@ -204,47 +193,45 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
 
       buffer = ByteBuffer.allocate( MessageBus.DATAGRAM_MTU );
 
-      if( ( MessageChannel.address.getAddress() == null ) || MessageChannel.address.getAddress().getHostAddress().equals( "0.0.0.0" ) )
-      {
+      if ( ( MessageChannel.address.getAddress() == null ) || MessageChannel.address.getAddress().getHostAddress().equals( "0.0.0.0" ) ) {
         // Make sure we get the IP Address by which the rest of the world knows us
         // or at least, our host's default network interface
-        try
-        {
+        try {
           // This helps insure that we do not get localhost (127.0.0.1)
           final InetAddress addr = InetAddress.getByName( InetAddress.getLocalHost().getHostName() );
           LOG.append( "MessageBus.ctor: MessageChannel address was not set, using " + addr );
           MessageChannel.setAddress( new MessageAddress( addr, MessageChannel.address.getPort(), 0, MessageChannel.address.getChannelId() ) );
-        }
-        catch( final UnknownHostException e )
-        {
+        } catch ( final UnknownHostException e ) {
           // Aaaaww Phooey! DNS is not working or we are not in it.
         }
 
       }
 
-    }
-    catch( final Exception e )
-    {
+    } catch ( final Exception e ) {
       e.printStackTrace();
 
       throw new IllegalArgumentException( e.getMessage() );
     }
   }
 
+
+
+
   /**
    * @param appender The log appender to use when appending messages to the log.
    */
-  public synchronized void setLogAppender( LogAppender appender )
-  {
+  public synchronized void setLogAppender( LogAppender appender ) {
     LOG = appender;
   }
+
+
+
 
   /**
    * @param appender The log appender to use when appending error messages to the log.
    */
-  public synchronized void setErrorAppender( LogAppender appender )
-  {
-    ERR = appender;    
+  public synchronized void setErrorAppender( LogAppender appender ) {
+    ERR = appender;
   }
 
 
@@ -255,12 +242,10 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
    *
    * @param netmask
    */
-  public void setNetmask( final String netmask )
-  {
+  public void setNetmask( final String netmask ) {
     // calculate a broadcast address based upon the currently set network mask
     // applied to the address in the URI
-    if( ( netmask != null ) && ( netmask.trim().length() > 0 ) )
-    {
+    if ( ( netmask != null ) && ( netmask.trim().length() > 0 ) ) {
       bcastaddr = new InetSocketAddress( NetUtil.getBroadcastAddress( busUri.getHost(), netmask ), busUri.getPort() );
     }
   }
@@ -271,8 +256,7 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
   /**
    * @return  the bcastaddr
    */
-  public SocketAddress getBcastaddr()
-  {
+  public SocketAddress getBcastaddr() {
     return bcastaddr;
   }
 
@@ -282,8 +266,7 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
   /**
    * This method will be called just before being added to the selector.
    */
-  public void initialize()
-  {
+  public void initialize() {
     // insert into the bus
     insertIntoBus();
 
@@ -298,22 +281,19 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
   /**
    * Method shutdown
    */
-  public void shutdown()
-  {
+  public void shutdown() {
     // If we were interrupted, we need to clear the interrupted flag so the
     // datagramChannel will properly send the last packet and not throw a closed
     // exception even though the channel is actually open.
     Thread.interrupted();
 
     // Stop sending heartbeats
-    if( heartbeatTimer != null )
-    {
+    if ( heartbeatTimer != null ) {
       heartbeatTimer.cancel();
     }
 
     // If we have a key we are probably connected to a socket so clean up
-    if( key != null )
-    {
+    if ( key != null ) {
       // withdraw from the bus, by first flushing out the packet queue then 
       // sending the withdrawal ADMIN packet
       withdrawFromBus();
@@ -322,13 +302,9 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
       // keys and closing channels
       key.cancel();
       key.attach( null );
-      try
-      {
+      try {
         key.channel().close();
-      }
-      catch( final IOException ignore )
-      {
-      }
+      } catch ( final IOException ignore ) {}
     }
 
     // We are no-longer performing I/O so we are offically shutdown.
@@ -341,8 +317,7 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
   /**
    * @return  Returns true if the bus has been shutdown, false otherwise.
    */
-  public boolean isShutdown()
-  {
+  public boolean isShutdown() {
     return shutdown;
   }
 
@@ -354,22 +329,15 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
    * 
    * @param timeout the number of milliseconds to wait for the bus.
    */
-  public void join( final long timeout )
-  {
+  public void join( final long timeout ) {
     final long tout = System.currentTimeMillis() + timeout;
-    while( System.currentTimeMillis() < tout )
-    {
-      try
-      {
+    while ( System.currentTimeMillis() < tout ) {
+      try {
         Thread.sleep( 10 );
-      }
-      catch( final InterruptedException e )
-      {
-      }
+      } catch ( final InterruptedException e ) {}
 
       // break when we are flagged as shutdown
-      if( shutdown )
-      {
+      if ( shutdown ) {
         break;
       }
 
@@ -389,11 +357,9 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
    *
    * @param message the Message to send
    */
-  public void send( final Message message, final short type )
-  {
+  public void send( final Message message, final short type ) {
     // if we have a message...
-    if( message != null )
-    {
+    if ( message != null ) {
       // ...create a Packet in which it can be transported
       final Packet packet = new Packet();
 
@@ -410,8 +376,7 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
       LOG.append( "Placed packet " + packet + " in queue for sending; size=" + packetQueue.size() + " packets" );
 
       // Make sure we are interested in the Write operation
-      if( ( key != null ) && key.isValid() )
-      {
+      if ( ( key != null ) && key.isValid() ) {
         key.selector().wakeup();
         key.interestOps( key.interestOps() | SelectionKey.OP_WRITE ); // causes thread lock on Sun!
       }
@@ -436,8 +401,7 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
    * 
    * @return A channel that has its source address assigned to this message bus.
    */
-  public MessageChannel createChannel( final int chnlId )
-  {
+  public MessageChannel createChannel( final int chnlId ) {
     // Create a new channel using the given handler
     final MessageChannel retval = new MessageChannel();
 
@@ -464,8 +428,7 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
    * @return A URI with a scheme that is recogizable so a socket may be created
    *         to support this handler.
    */
-  public URI getServiceUri()
-  {
+  public URI getServiceUri() {
     return busUri;
   }
 
@@ -477,8 +440,7 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
    *
    * @param channel
    */
-  public void setChannel( final AbstractSelectableChannel channel )
-  {
+  public void setChannel( final AbstractSelectableChannel channel ) {
     datagramChannel = (DatagramChannel)channel;
   }
 
@@ -490,8 +452,7 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
    * 
    * @see coyote.mbus.network.NetworkServiceHandler#getChannel()
    */
-  public AbstractSelectableChannel getChannel()
-  {
+  public AbstractSelectableChannel getChannel() {
     return datagramChannel;
   }
 
@@ -502,8 +463,7 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
    * @see coyote.mbus.network.NetworkServiceHandler#setKey(java.nio.channels.SelectionKey)
    * @param  key
    */
-  public void setKey( final SelectionKey key )
-  {
+  public void setKey( final SelectionKey key ) {
     this.key = key;
   }
 
@@ -513,8 +473,7 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
   /**
    * Return our NIO selection key.
    */
-  public SelectionKey getKey()
-  {
+  public SelectionKey getKey() {
     return key;
   }
 
@@ -528,9 +487,7 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
    *
    * @param key
    */
-  public void accept( final SelectionKey key )
-  {
-  }
+  public void accept( final SelectionKey key ) {}
 
 
 
@@ -542,9 +499,7 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
    *
    * @param key
    */
-  public void connect( final SelectionKey key )
-  {
-  }
+  public void connect( final SelectionKey key ) {}
 
 
 
@@ -559,52 +514,44 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
    *
    * @param key
    */
-  public void read( final SelectionKey key )
-  {
+  public void read( final SelectionKey key ) {
     byte[] data;
     Packet packet = null;
     InetSocketAddress address;
 
     LOG.append( "MessageBus.read()" );
 
-    try
-    {
+    try {
       // CAREFUL! This will read multiple messages if they are in the UDP buffer
-      while( ( address = (InetSocketAddress)datagramChannel.receive( buffer ) ) != null )
-      {
+      while ( ( address = (InetSocketAddress)datagramChannel.receive( buffer ) ) != null ) {
         buffer.flip();
 
         LOG.append( buffer.remaining() + " bytes of data received from " + address );
 
-        if( buffer.remaining() > 0 )
-        {
+        if ( buffer.remaining() > 0 ) {
           data = new byte[buffer.remaining()]; // allocate a byte array
 
           buffer.get( data ); // copy the data into the buffer
           buffer.clear(); // clear out the buffer
 
-          try
-          {
+          try {
             packet = new Packet( data );
             packet.remoteAddress = address.getAddress();
             packet.remotePort = address.getPort();
 
             LOG.append( "Received " + packet + " from " + packet.remoteAddress + ":" + packet.remotePort );
-            if( packet.message != null )
-            {
+            if ( packet.message != null ) {
               LOG.append( "Received packet contained a message:\r\n" + packet.message.toString() );
             }
 
             // Only process packets from other endpoints...
-            if( packet.endPoint != this.endpoint )
-            {
+            if ( packet.endPoint != this.endpoint ) {
               // Get the RemoteNode representing the node from which this 
               // message came
               RemoteNode node = nodes.get( new Long( packet.endPoint ) );
 
               // If there is no node on record...
-              if( node == null )
-              {
+              if ( node == null ) {
                 // Create a new RemoteNode with a reference to the bus channel
                 // so it can route the packet to all the channels it manages
                 node = new RemoteNode( this, this.endpoint, cache, packet.endPoint, address );
@@ -612,7 +559,7 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
                 // Set loggers
                 node.setLogAppender( LOG );
                 node.setErrorAppender( ERR );
-                
+
                 // record the nodes UDP address
                 node.udpAddress = address.getAddress();
                 node.udpPort = address.getPort();
@@ -624,43 +571,33 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
               // Check for duplicate endpoints by checking the source address.
               // Some multi-homed hosts may get confused and send messages over
               // both their interfaces...Ignore duplicates!
-              if( address.getAddress().equals( node.udpAddress ) )
-              {
+              if ( address.getAddress().equals( node.udpAddress ) ) {
                 // Have the node process the packet as it has all the details
                 // regarding how to process the packet with respect to that node
                 node.processPacket( packet );
-              }
-              else
-              {
+              } else {
                 LOG.append( "Detected duplicate endpoint " + packet.endPoint + " first observed on " + node.udpAddress + " now observed on " + address.getAddress() );
               }
 
             } // if remote endpoint
 
-            if( packet.type == Packet.ADMIN )
-            {
+            if ( packet.type == Packet.ADMIN ) {
               // Handle administration packets
               processAdminPacket( packet );
             }
 
-          }
-          catch( final Exception ex )
-          {
+          } catch ( final Exception ex ) {
             LOG.append( "Message from " + address + " was not a valid message packet " + ex.getMessage() );
             LOG.append( ByteUtil.dump( data, data.length ) );
-            LOG.append( MessageException.stackTrace( ex ) );
+            LOG.append( ExceptionUtil.stackTrace( ex ) );
           }
-        }
-        else
-        {
+        } else {
           LOG.append( "Read from datagram channel, but no bytes were there - not bad, but wierd." );
         }
       }
-    }
-    catch( final IOException ignore )
-    {
-      if(!shutdown)
-        ERR.append( "Exception on read(): " + ignore.getMessage() + "\r\n" + MessageException.stackTrace( ignore ) );
+    } catch ( final IOException ignore ) {
+      if ( !shutdown )
+        ERR.append( "Exception on read(): " + ignore.getMessage() + "\r\n" + ExceptionUtil.stackTrace( ignore ) );
     }
   }
 
@@ -676,17 +613,14 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
    *
    * @param key
    */
-  public void write( final SelectionKey key )
-  {
+  public void write( final SelectionKey key ) {
     LOG.append( "MicroBus.write()" );
 
     // if we are inserted into the bus (have a BusID assigned and negotiated)
-    if( inserted > 0 )
-    {
+    if ( inserted > 0 ) {
       LOG.append( "MicroBus.write() sending packets from queue of " + packetQueue.size() + " packets waiting to be sent" );
       // while we have any packets in our outbound queue
-      while( packetQueue.size() > 0 )
-      {
+      while ( packetQueue.size() > 0 ) {
         // get next packet in the queue (should not block inside while block)
         final Packet packet = packetQueue.next();
 
@@ -708,8 +642,7 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
     LOG.append( "MicroBus.write() completed sending packets" );
 
     // Inform the selector that we no-longer need write operations
-    if( key.isValid() )
-    {
+    if ( key.isValid() ) {
       key.interestOps( key.interestOps() & ~SelectionKey.OP_WRITE );
     }
   }
@@ -722,35 +655,27 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
    * 
    * @param packet The packet to process.
    */
-  private void processAdminPacket( final Packet packet )
-  {
+  private void processAdminPacket( final Packet packet ) {
     LOG.append( "processAdminPacket: Admin packet from  " + packet.remoteAddress + " ep:" + packet.endPoint );
-    if( packet.message != null )
-    {
+    if ( packet.message != null ) {
       LOG.append( "processAdminPacket: MSG:\r\n" + packet.message.toXml() );
       DataField field = packet.message.getField( OamMessage.ACTION );
 
-      if( field != null )
-      {
+      if ( field != null ) {
         // We have an action field which means this follows the OAM 
         // formatting standard
         final String action = field.getObjectValue().toString();
 
         // INSERT / / / / / / / / / / / / / / / / / / / / / / / / / / 
-        if( OamMessage.INSERT.equals( action ) )
-        {
+        if ( OamMessage.INSERT.equals( action ) ) {
           LOG.append( "processAdminPacket: Processing INSERT packet from " + packet.remoteAddress );
           field = packet.message.getField( OamMessage.TOKEN );
           long tokn = 0;
-          if( field != null )
-          {
-            try
-            {
+          if ( field != null ) {
+            try {
               tokn = Long.parseLong( field.getObjectValue().toString() );
               LOG.append( "processAdminPacket: Parsed token as " + tokn + " ours=" + token );
-            }
-            catch( final RuntimeException ignore )
-            {
+            } catch ( final RuntimeException ignore ) {
               // can't complain since the token is not an integer and we use an
               // integer to specify our token. This must be from another node.
               // Log.warn( "Token '" + field.getStringValue() + "' was not numeric" );
@@ -759,17 +684,13 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
           }
 
           // check to make sure it is not a duplicate
-          if( packet.remoteAddress.equals( MessageChannel.address.getAddress() ) && ( tokn == token ) )
-          {
+          if ( packet.remoteAddress.equals( MessageChannel.address.getAddress() ) && ( tokn == token ) ) {
             // this came from this host, check the token
             LOG.append( "processAdminPacket: Ignoring our own INSERT" );
-          }
-          else
-          {
+          } else {
             LOG.append( "processAdminPacket: Processing remote INSERT: packet.endpoint=" + packet.endPoint + " ours=" + endpoint );
 
-            if( packet.endPoint == this.endpoint )
-            {
+            if ( packet.endPoint == this.endpoint ) {
               LOG.append( "processAdminPacket: CONFLICT! " + endpoint );
               // Send an ARP indicating we have the endpoint
               final Packet admin = new Packet();
@@ -784,9 +705,7 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
 
               // Send the packet
               send( admin );
-            }
-            else
-            {
+            } else {
               LOG.append( "processAdminPacket: INSERTION passed." );
             }
           }
@@ -794,29 +713,23 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
 
         // / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / /
         // WITHDRAW / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / 
-        else if( OamMessage.WITHDRAW.equals( action ) )
-        {
+        else if ( OamMessage.WITHDRAW.equals( action ) ) {
           LOG.append( "processAdminPacket: Processing WITHDRAW packet" );
           // remove the node, mark it as expired
         }
 
         // / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / /
         // ARP / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / /
-        else if( OamMessage.ARP.equals( action ) )
-        {
+        else if ( OamMessage.ARP.equals( action ) ) {
           LOG.append( "processAdminPacket: Processing ARP packet" );
           field = packet.message.getField( OamMessage.TOKEN );
           long tokn = 0;
-          if( field != null )
-          {
+          if ( field != null ) {
             LOG.append( "processAdminPacket: Parsing token of '" + field.getObjectValue().toString() + "'" );
-            try
-            {
+            try {
               tokn = Long.parseLong( field.getObjectValue().toString() );
               LOG.append( "processAdminPacket: Parsed token as " + tokn + " ours=" + token );
-            }
-            catch( final RuntimeException ignore )
-            {
+            } catch ( final RuntimeException ignore ) {
               // can't complain since the token is not an integer and we use an
               // integer to specify our token. This must be from another node.
               // Log.warn( "Could not parse token of '" + field.getStringValue() + "' into an integer" );
@@ -825,35 +738,25 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
           }
 
           // check to make sure it is not a duplicate
-          if( packet.remoteAddress.equals( MessageChannel.address.getAddress() ) && ( tokn == token ) )
-          {
+          if ( packet.remoteAddress.equals( MessageChannel.address.getAddress() ) && ( tokn == token ) ) {
             // this came from this host and runtime instance
             LOG.append( "processAdminPacket: Ignoring our own ALERT" );
-          }
-          else
-          {
+          } else {
             field = packet.message.getField( OamMessage.SOURCE_ENDPOINT );
             // if this endpoint is in conflict
-            if( ( field != null ) && field.isNumeric() )
-            {
-              try
-              {
-                if( this.endpoint == ( (Long)field.getObjectValue() ).longValue() ) //field.getAsLong() )
+            if ( ( field != null ) && field.isNumeric() ) {
+              try {
+                if ( this.endpoint == ( (Long)field.getObjectValue() ).longValue() ) //field.getAsLong() )
                 {
                   LOG.append( "processAdminPacket: Processing remote ARP: packet.endpoint=" + packet.endPoint + " ours=" + endpoint + " token:" + tokn + " ours=" + token );
-                  if( ( inserted + MessageBus.INSERTION_INTERVAL ) > System.currentTimeMillis() )
-                  {
+                  if ( ( inserted + MessageBus.INSERTION_INTERVAL ) > System.currentTimeMillis() ) {
                     LOG.append( "processAdminPacket: Still in insertion phase, re-inserting into network with new endpoint" );
                     insertIntoBus();
-                  }
-                  else
-                  {
+                  } else {
                     LOG.append( "processAdminPacket: No longer in insertion phase: instd:" + inserted + " intvl:" + MessageBus.INSERTION_INTERVAL + " <= " + System.currentTimeMillis() );
                   }
                 }
-              }
-              catch( final Exception e )
-              {
+              } catch ( final Exception e ) {
                 // Apparently the endpoint was not a long, therefore it is not 
                 // from this instance as we use a long to represent our token
               }
@@ -884,17 +787,14 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
    * @param packet The packet that is to be sent to the transport medium to affect
    *        the communications protocol implemented by the caller.
    */
-  public void send( final Packet packet )
-  {
+  public void send( final Packet packet ) {
     LOG.append( "MicroBus.send(Packet) packet: " + packet );
 
-    if( packet != null )
-    {
+    if ( packet != null ) {
       SocketAddress destination = null;
 
       // Only cache and renumber MSG and ADMIN messages
-      if( ( packet.type == Packet.MSG ) || ( packet.type == Packet.ADMIN ) )
-      {
+      if ( ( packet.type == Packet.MSG ) || ( packet.type == Packet.ADMIN ) ) {
         // Set the packet sequence from this node
         packet.sequence = sequence++;
 
@@ -904,10 +804,8 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
         packet.timestamp = MessageBus.cal.getTimeInMillis() + MessageBus.cal.get( Calendar.ZONE_OFFSET ) - MessageBus.cal.get( Calendar.DST_OFFSET );
 
         // Make sure we have a source address
-        if( packet.getSourceAddress() == null )
-        {
-          if( packet.message != null )
-          {
+        if ( packet.getSourceAddress() == null ) {
+          if ( packet.message != null ) {
             ( packet.message ).setSource( new MessageAddress( MessageChannel.address.getAddress(), MessageChannel.address.getPort(), endpoint, -1 ) );
             LOG.append( "MicroBus.send(Frame) set source address as " + ( packet.message ).getSource().toString() );
           }
@@ -924,59 +822,45 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
       final MessageAddress target = packet.getTargetAddress();
 
       // If there is a target address, send it there (unicast)
-      if( target != null )
-      {
+      if ( target != null ) {
         // use the target address to get the host of the destination, but not 
         // the port because the port may be different since it represents the 
         // TCP port and not the UDP port.
         destination = new InetSocketAddress( target.getAddress(), busUri.getPort() );
-      }
-      else
-      {
+      } else {
         // else, broadcast the data on the bus
         destination = bcastaddr;
       }
 
       String line = "MicroBus.send(Packet) Sending " + packet.toString() + "  to ----------> " + destination;
-      if( packet.message != null )
-      {
+      if ( packet.message != null ) {
         line = new String( line + "\r\n" + packet.message.toString() );
       }
       LOG.append( line );
 
       // send the packet on the network
-      try
-      {
+      try {
         final int sent = datagramChannel.send( ByteBuffer.wrap( packet.getBytes() ), destination );
 
         // Important logging of synchronization delivery messages
-        if( Packet.NAK == packet.getType() )
-        {
+        if ( Packet.NAK == packet.getType() ) {
           LOG.append( "NAK sent to " + destination.toString() + ":\n" + packet.toString() );
-        }
-        else if( Packet.RETRANSMIT == packet.getType() )
-        {
+        } else if ( Packet.RETRANSMIT == packet.getType() ) {
           LOG.append( "Successful RETRANSMIT to " + destination.toString() + ":\n" + packet.toString() );
-        }
-        else if( Packet.RETRANSMIT == packet.getType() )
-        {
+        } else if ( Packet.RETRANSMIT == packet.getType() ) {
           LOG.append( "EXPIRED message sent to " + destination.toString() + ":\n" + packet.toString() );
         }
 
         LOG.append( "MicroBus.send(Frame) Sent " + sent + " bytes to " + destination );
 
-      }
-      catch( final ClosedChannelException e )
-      {
+      } catch ( final ClosedChannelException e ) {
         // ClosedChannelException - If this channel is closed
         //        if( !MicroBus.isShutdown() )
         //        {
         //          ERR.append( "Channel closed before sending packet " + packet.sequence );
         //        }
-      }
-      catch( final Throwable e )
-      {
-        ERR.append( "Could not send packet " + packet.sequence + ": " + e.getClass().getName() + ": " + e.getMessage() + "\r\n" + PacketException.stackTrace( e ) );
+      } catch ( final Throwable e ) {
+        ERR.append( "Could not send packet " + packet.sequence + ": " + e.getClass().getName() + ": " + e.getMessage() + "\r\n" + ExceptionUtil.stackTrace( e ) );
         // AsynchronousCloseException - If another thread closes this channel while the read operation is in progress
         // ClosedByInterruptException - If another thread interrupts the current thread while the read operation is in progress, thereby closing the channel and setting the current thread's interrupt status
         // SecurityException - If a security manager has been installed and it does not permit datagrams to be sent to the given address
@@ -998,14 +882,12 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
    * &quot;INSERT&quot; which acts to notify all the participants on the bus
    * that this node is using a particular endpoint identifier.</p>
    */
-  private void insertIntoBus()
-  {
+  private void insertIntoBus() {
     // Create a bus identifier at random, Java uses signed integer
     endpoint = generator.nextInt();
 
     // make sure it is positive
-    if( endpoint < 0 )
-    {
+    if ( endpoint < 0 ) {
       endpoint *= -1;
     }
 
@@ -1032,13 +914,10 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
 
     // Create a new address based upon our existing socket address and port, 
     // inserted endpoint identifier and existing channel identifier
-    if( ( tcpService != null ) && ( tcpService.getKey() != null ) )
-    {
+    if ( ( tcpService != null ) && ( tcpService.getKey() != null ) ) {
       // try to use the actual values of the initialized TCP service
       MessageChannel.setAddress( new MessageAddress( tcpService.getAddress(), tcpService.getPort(), endpoint, MessageChannel.address.getChannelId() ) );
-    }
-    else
-    {
+    } else {
       // use what was previously set
       MessageChannel.setAddress( new MessageAddress( MessageChannel.address.getAddress(), MessageChannel.address.getPort(), endpoint, MessageChannel.address.getChannelId() ) );
     }
@@ -1059,8 +938,7 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
    * retransmitted as the sender will not be around to receive the NAK, let
    * alone re-send the packet.</p>
    */
-  void withdrawFromBus()
-  {
+  void withdrawFromBus() {
     // clear out our outbound queue prior to withdrawal
     flush();
 
@@ -1083,20 +961,14 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
   /**
    * Try to flush our outbound messages to the bus
    */
-  void flush()
-  {
-    if( packetQueue.size() > 0 )
-    {
+  void flush() {
+    if ( packetQueue.size() > 0 ) {
       // Try to flush our outbound messages to the bus
-      try
-      {
-        while( packetQueue.size() > 0 )
-        {
+      try {
+        while ( packetQueue.size() > 0 ) {
           write( key );
         }
-      }
-      catch( final Exception ignore )
-      {
+      } catch ( final Exception ignore ) {
         // best effort...usually during shutdown so there is nothing to do
       }
     }
@@ -1113,8 +985,7 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
    * heartbeat packet to the current broadcast address. There is no caching of
    * the packet.</p>
    */
-  void sendHeartbeat()
-  {
+  void sendHeartbeat() {
     // Create a new packet
     final Packet packet = new Packet();
 
@@ -1128,22 +999,18 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
     packet.type = Packet.HEARTBEAT;
 
     // Create a heartbeat message if we haven't already done so.
-    if( heartbeatPacket == null )
-    {
+    if ( heartbeatPacket == null ) {
       heartbeatPacket = OamMessage.createHeartbeatMessage( MessageChannel.address.getAddress().getHostAddress(), MessageChannel.address.getPort() );
     }
 
     // Attach an OAM message that represents our current status
     packet.message = heartbeatPacket;
 
-    try
-    {
+    try {
       // send the packet on the broadcast address of the Message port
       datagramChannel.send( ByteBuffer.wrap( packet.getBytes() ), bcastaddr );
       LOG.append( "MessageBus.sendHeartbeat: sent heartbeat - last packet sent = " + packet.sequence );
-    }
-    catch( final IOException e )
-    {
+    } catch ( final IOException e ) {
       ERR.append( "Could not send heartbeat: " + e.getMessage() );
     }
 
@@ -1163,15 +1030,11 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
    * 
    * @param msg The message to process.
    */
-  public void onMessage( final Message msg )
-  {
-    if( msg instanceof ClosureMessage )
-    {
+  public void onMessage( final Message msg ) {
+    if ( msg instanceof ClosureMessage ) {
       // Time to shutdown!
       shutdown();
-    }
-    else
-    {
+    } else {
       send( msg, Packet.MSG );
     }
   }
@@ -1187,8 +1050,7 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
    *
    * @param message The message to pass to the Message Manager.
    */
-  public void process( final Message message )
-  {
+  public void process( final Message message ) {
     // This message came from the bus, set the source channel to prevent loops
     message.sourceChannel = MessageChannel;
 
@@ -1218,14 +1080,11 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
    * @return A List of RemoteNode objects representing all the discovered nodes
    *         in the network.
    */
-  public List<RemoteNode> getNodeIterator()
-  {
-    synchronized( nodes )
-    {
+  public List<RemoteNode> getNodeIterator() {
+    synchronized( nodes ) {
       final ArrayList<RemoteNode> list = new ArrayList<RemoteNode>();
 
-      for( final Iterator<RemoteNode> it = nodes.values().iterator(); it.hasNext(); list.add( it.next() ) )
-      {
+      for ( final Iterator<RemoteNode> it = nodes.values().iterator(); it.hasNext(); list.add( it.next() ) ) {
         ;
       }
 
@@ -1239,17 +1098,13 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
   /**
    * @return A string representation of the object.
    */
-  public String toString()
-  {
+  public String toString() {
     final StringBuffer retval = new StringBuffer( "Bus" );
-    if( endpoint > -1 )
-    {
+    if ( endpoint > -1 ) {
       retval.append( "(" );
       retval.append( endpoint );
       retval.append( ")" );
-    }
-    else
-    {
+    } else {
       retval.append( ' ' );
     }
     retval.append( busUri );
@@ -1267,8 +1122,7 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
   /**
    * @return  The Message that is broadcast as a heartbeat.
    */
-  public Message getHeartbeatPacket()
-  {
+  public Message getHeartbeatPacket() {
     return heartbeatPacket;
   }
 
@@ -1278,8 +1132,7 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
   /**
    * @return  Returns the heartbeatInterval in milliseconds.
    */
-  public long getHeartbeatInterval()
-  {
+  public long getHeartbeatInterval() {
     return heartbeatInterval;
   }
 
@@ -1289,8 +1142,7 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
   /**
    * @param millis  The number of milliseconds between heartbeats.
    */
-  public void setHeartbeatInterval( final long millis )
-  {
+  public void setHeartbeatInterval( final long millis ) {
     this.heartbeatInterval = millis;
   }
 
@@ -1300,8 +1152,7 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
   /**
    * @return the number of packets waiting to be written to the bus.
    */
-  public int getOutboundQueueDepth()
-  {
+  public int getOutboundQueueDepth() {
     return packetQueue.size();
   }
 
@@ -1311,8 +1162,7 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
   /**
    * @see coyote.mbus.network.NetworkServiceHandler#fireGroupJoined(java.lang.String, coyote.mbus.network.MessageChannel)
    */
-  public void fireGroupJoined( final String group, final MessageChannel channel )
-  {
+  public void fireGroupJoined( final String group, final MessageChannel channel ) {
     LOG.append( channel + " joined the '" + group + "' group" );
     send( OamMessage.createJoinMessage( group ), Packet.ADMIN );
   }
@@ -1323,8 +1173,7 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
   /**
    * @see coyote.mbus.network.NetworkServiceHandler#fireGroupLeave(java.lang.String, coyote.mbus.network.MessageChannel)
    */
-  public void fireGroupLeave( final String group, final MessageChannel channel )
-  {
+  public void fireGroupLeave( final String group, final MessageChannel channel ) {
     LOG.append( channel + " left the '" + group + "' group" );
     send( OamMessage.createLeaveMessage( group ), Packet.ADMIN );
   }
@@ -1335,8 +1184,7 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
   /**
    * @return the iterator over the Remote Nodes discoverd so far.
    */
-  public Iterator<RemoteNode> getRemoteNodeIterator()
-  {
+  public Iterator<RemoteNode> getRemoteNodeIterator() {
     return nodes.values().iterator();
   }
 
@@ -1352,8 +1200,7 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
    * @return true if the bus is inserted and the selection key is valid, false
    *         otherwise
    */
-  public boolean isReady()
-  {
+  public boolean isReady() {
     return ( ( inserted > 0 ) && ( key != null ) && key.isValid() );
   }
 
@@ -1364,16 +1211,14 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
    * Setup a dependency on the given TCP service, not initializing until the  service is operational.
    * @param svc  The server on which to depend.
    */
-  public void setTcpService( final MessageService svc )
-  {
+  public void setTcpService( final MessageService svc ) {
     this.tcpService = svc;
   }
 
   /**
    * The HeartbeatTask is run by the HeartbeatTimer once each second.
    */
-  class HeartbeatTask extends TimerTask
-  {
+  class HeartbeatTask extends TimerTask {
     /**
      * Go through all the received chunks of data and attempt to create Message
      * Packets from them.
@@ -1381,31 +1226,24 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
      * <p>Pass each message packet through it's respective RemoteNode instance to 
      * affect reliable delivery.</p>
      */
-    public void run()
-    {
+    public void run() {
       // now see if there is data to send,
-      if( packetQueue.size() > 0 )
-      {
+      if ( packetQueue.size() > 0 ) {
         // if the key isn't valid for some reason, then send them from here!
-        if( key.isValid() )
-        {
+        if ( key.isValid() ) {
           key.interestOps( key.interestOps() | SelectionKey.OP_WRITE );
-        }
-        else
-        {
+        } else {
           numberOfTimesInvalidKeyWasObserved++;
           write( key );
         }
       }
 
       // If it is time to send a heartbeat packet, do so
-      if( nextHeartbeat <= System.currentTimeMillis() )
-      {
+      if ( nextHeartbeat <= System.currentTimeMillis() ) {
         // expire messages every time we send a heartbeat
         cache.expire( 60000 );// MicroBus.EXPIRATION_INTERVAL );
 
-        if( numberOfTimesInvalidKeyWasObserved > 0 )
-        {
+        if ( numberOfTimesInvalidKeyWasObserved > 0 ) {
           System.err.println( "Invalid key count=" + numberOfTimesInvalidKeyWasObserved );
           numberOfTimesInvalidKeyWasObserved = 0;
         }
@@ -1414,15 +1252,12 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
         sendHeartbeat();
 
         // Now clean up any old nodes in memory
-        synchronized( nodes )
-        {
-          for( final Iterator it = nodes.values().iterator(); it.hasNext(); )
-          {
+        synchronized( nodes ) {
+          for ( final Iterator it = nodes.values().iterator(); it.hasNext(); ) {
             final RemoteNode node = (RemoteNode)it.next();
 
             // if the node has expired or withdrawn, remove it
-            if( node.isWithdrawn() || node.isExpired() )
-            {
+            if ( node.isWithdrawn() || node.isExpired() ) {
               node.close();
               it.remove();
             } // remove withdrawn/expired nodes

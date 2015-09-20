@@ -15,29 +15,30 @@ import java.util.Calendar;
 import java.util.Date;
 
 import coyote.commons.ByteUtil;
-import coyote.commons.StringUtil;
 import coyote.dataframe.DataField;
-
 
 
 /**
  * The MessageUtil class contains utilities for dealing with messages.
  */
-public class MessageUtil
-{
+public class MessageUtil {
+
+  /** Platform specific line separator (default = CRLF) */
+  public static final String LINE_FEED = System.getProperty( "line.separator", "\r\n" );
+
+
+
 
   /**
    * Method dump
    */
-  public static String dump( final Message packet )
-  {
+  public static String dump( final Message packet ) {
     final int length = packet.getBytes().length;
     final StringBuffer buffer = new StringBuffer();
     buffer.append( "packet message of " );
     buffer.append( length );
     buffer.append( " bytes\r\n" );
-    if( packet.getTimestamp() > 0 )
-    {
+    if ( packet.getTimestamp() > 0 ) {
       buffer.append( "Timestamp: " );
       buffer.append( new Date( packet.getTimestamp() ) );
     }
@@ -51,42 +52,34 @@ public class MessageUtil
 
 
 
-  public static Message parseXML( final String xml )
-  {
+  public static Message parseXML( final String xml ) {
     return null;
   }
 
 
 
 
-  public static String prettyPrint( final Message packet, final int indent )
-  {
+  public static String prettyPrint( final Message packet, final int indent ) {
     String padding = null;
     int nextindent = -1;
 
-    if( indent > -1 )
-    {
+    if ( indent > -1 ) {
       final char[] pad = new char[indent];
-      for( int i = 0; i < indent; pad[i++] = ' ' )
-      {
+      for ( int i = 0; i < indent; pad[i++] = ' ' ) {
         ;
       }
 
       padding = new String( pad );
       nextindent = indent + 2;
-    }
-    else
-    {
+    } else {
       padding = new String( "" );
     }
 
     final StringBuffer buffer = new StringBuffer();
 
-    for( int x = 0; x < packet.getFieldCount(); x++ )
-    {
+    for ( int x = 0; x < packet.getFieldCount(); x++ ) {
       final DataField field = packet.getField( x );
-      if( indent > -1 )
-      {
+      if ( indent > -1 ) {
         buffer.append( padding );
       }
       buffer.append( x );
@@ -100,18 +93,14 @@ public class MessageUtil
       buffer.append( field.getType() );
       buffer.append( ") " );
 
-      if( field.getType() == 66 )
-      {
+      if ( field.getType() == 66 ) {
         buffer.append( System.getProperty( "line.separator" ) );
         buffer.append( MessageUtil.prettyPrint( (Message)field.getObjectValue(), nextindent ) );
-      }
-      else
-      {
+      } else {
         buffer.append( field.getObjectValue() );
       }
 
-      if( x + 1 < packet.getFieldCount() )
-      {
+      if ( x + 1 < packet.getFieldCount() ) {
         buffer.append( System.getProperty( "line.separator" ) );
       }
 
@@ -130,8 +119,7 @@ public class MessageUtil
    *
    * @return A string in thr format of yyyymmddThhmmss.zzz ZZZZ
    */
-  private static String toBasic( final Date date )
-  {
+  private static String toBasic( final Date date ) {
     final Calendar cal = Calendar.getInstance();
     cal.setTime( date );
 
@@ -149,20 +137,14 @@ public class MessageUtil
     int hours = offset / ( 60 * 60 );
     final int minutes = offset - ( hours * ( 60 * 60 ) );
 
-    if( offset == 0 )
-    {
+    if ( offset == 0 ) {
       retval.append( "Z" );
-    }
-    else
-    {
-      if( offset < 0 )
-      {
+    } else {
+      if ( offset < 0 ) {
         retval.append( "-" );
 
         hours *= -1;
-      }
-      else
-      {
+      } else {
         retval.append( "+" );
       }
 
@@ -176,111 +158,84 @@ public class MessageUtil
 
 
 
-  private static String toBasic( final long millis )
-  {
+  private static String toBasic( final long millis ) {
     return MessageUtil.toBasic( new Date( millis ) );
   }
 
 
 
 
-  public static String toXML( final Message packet, final int indent )
-  {
+  public static String toXML( final Message packet, final int indent ) {
     String padding = null;
     String nextPadding = null;
 
     int nextindent = -1;
 
-    if( indent > -1 )
-    {
+    if ( indent > -1 ) {
       final char[] pad = new char[indent];
-      for( int i = 0; i < indent; pad[i++] = ' ' )
-      {
+      for ( int i = 0; i < indent; pad[i++] = ' ' ) {
         ;
       }
 
       padding = new String( pad );
       nextindent = indent + 2;
-    }
-    else
-    {
+    } else {
       padding = new String( "" );
     }
 
     final StringBuffer xml = new StringBuffer( padding + "<" );
 
-    if( packet.getType() != null )
-    {
+    if ( packet.getType() != null ) {
       xml.append( packet.getType() );
-    }
-    else
-    {
+    } else {
       xml.append( "Message" );
     }
 
-    if( packet.getTimestamp() > 0 )
-    {
-      // It would be nice to specify a timezone ito which this timestamp would
+    if ( packet.getTimestamp() > 0 ) {
+      // It would be nice to specify a timezone into which this timestamp would
       // be converted; ie. if this is represented in MDT it would be nice to
       // get it converted to EDT at will
       xml.append( " stamp=\"" + MessageUtil.toBasic( packet.getTimestamp() ) + "\"" );
     }
 
-    if( packet.getId() != null )
-    {
+    if ( packet.getId() != null ) {
       xml.append( " id=\"" + packet.getIdString() + "\"" );
     }
 
-    if( ( packet.getFieldCount() > 0 ) )
-    {
+    if ( ( packet.getFieldCount() > 0 ) ) {
 
       xml.append( ">" );
 
-      if( indent >= 0 )
-      {
-        xml.append( StringUtil.LINE_FEED );
+      if ( indent >= 0 ) {
+        xml.append( LINE_FEED );
       }
 
-      if( nextindent > -1 )
-      {
+      if ( nextindent > -1 ) {
         final char[] pad = new char[nextindent];
-        for( int i = 0; i < nextindent; pad[i++] = ' ' )
-        {
+        for ( int i = 0; i < nextindent; pad[i++] = ' ' ) {
           ;
         }
 
         nextPadding = new String( pad );
-      }
-      else
-      {
+      } else {
         nextPadding = new String( "" );
       }
 
-      for( int x = 0; x < packet.getFieldCount(); x++ )
-      {
+      for ( int x = 0; x < packet.getFieldCount(); x++ ) {
         final DataField field = packet.getField( x );
 
-        if( Message.TYPE.equals( field.getName() ) )
-        {
-        }
-        else if( Message.IDENTIFIER.equals( field.getName() ) )
-        {
-        }
-        else
-        {
+        if ( Message.TYPE.equals( field.getName() ) ) {} else if ( Message.IDENTIFIER.equals( field.getName() ) ) {} else {
           xml.append( nextPadding );
 
           String fname = field.getName();
           xml.append( padding );
-          if( fname == null )
-          {
+          if ( fname == null ) {
             fname = "field" + x;
           }
 
           xml.append( "<Field " );
 
-          if( field.getName() != null )
-          {
+          if ( field.getName() != null ) {
             xml.append( "name='" );
             xml.append( field.getName() );
             xml.append( "' " );
@@ -293,24 +248,18 @@ public class MessageUtil
 
         }
 
-        if( indent >= 0 )
-        {
-          xml.append( StringUtil.LINE_FEED );
+        if ( indent >= 0 ) {
+          xml.append( LINE_FEED );
         }
       }
 
-      if( packet.getType() != null )
-      {
+      if ( packet.getType() != null ) {
         xml.append( padding + "</" + packet.getType() + ">" );
-      }
-      else
-      {
+      } else {
         xml.append( "</Message>" );
       }
 
-    }
-    else
-    {
+    } else {
       xml.append( "/>" );
     }
 
@@ -329,48 +278,38 @@ public class MessageUtil
    *
    * @return an XML representation of the packet.
    */
-  public static String toXML( final Message packet, final String name )
-  {
+  public static String toXML( final Message packet, final String name ) {
     final StringBuffer buffer = new StringBuffer();
     buffer.append( "<Message" );
-    if( name != null )
-    {
+    if ( name != null ) {
       buffer.append( " name='" );
       buffer.append( name );
       buffer.append( "'" );
     }
 
-    if( packet.getPriority() != Message.NORMAL )
-    {
+    if ( packet.getPriority() != Message.NORMAL ) {
       buffer.append( " priority='" );
       buffer.append( packet.getPriorityString() );
       buffer.append( "'" );
     }
 
-    if( packet.getFieldCount() > 0 )
-    {
+    if ( packet.getFieldCount() > 0 ) {
       buffer.append( ">" );
-      for( int i = 0; i < packet.getFieldCount(); i++ )
-      {
+      for ( int i = 0; i < packet.getFieldCount(); i++ ) {
         final DataField field = packet.getField( i );
 
-        if( field.getType() == 66 )
-        {
+        if ( field.getType() == 66 ) {
           buffer.append( MessageUtil.toXML( (Message)field.getObjectValue(), field.getName() ) );
-        }
-        else
-        {
+        } else {
           String fname = field.getName();
 
-          if( fname == null )
-          {
+          if ( fname == null ) {
             fname = "field" + i;
           }
 
           buffer.append( "<Field " );
 
-          if( field.getName() != null )
-          {
+          if ( field.getName() != null ) {
             buffer.append( "name='" );
             buffer.append( field.getName() );
             buffer.append( "' " );
@@ -384,9 +323,7 @@ public class MessageUtil
       } // foreach field
 
       buffer.append( "</Message>" );
-    }
-    else
-    {
+    } else {
       buffer.append( "/>" );
     }
 
@@ -402,18 +339,15 @@ public class MessageUtil
    * @param num
    * @param size
    */
-  private static String zeropad( final int num, final int size )
-  {
+  private static String zeropad( final int num, final int size ) {
     final String value = Integer.toString( num );
 
-    if( value.length() >= size )
-    {
+    if ( value.length() >= size ) {
       return value;
     }
 
     final StringBuffer buf = new StringBuffer( size );
-    for( int i = 0; i++ < ( size - value.length() ); buf.append( '0' ) )
-    {
+    for ( int i = 0; i++ < ( size - value.length() ); buf.append( '0' ) ) {
       ;
     }
 
@@ -428,8 +362,6 @@ public class MessageUtil
   /**
    * 
    */
-  private MessageUtil()
-  {
-  }
+  private MessageUtil() {}
 
 }

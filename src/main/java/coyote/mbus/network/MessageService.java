@@ -24,7 +24,7 @@ import java.nio.channels.spi.AbstractSelectableChannel;
 import java.util.HashMap;
 
 import coyote.commons.ByteUtil;
-import coyote.commons.ChainedException;
+import coyote.commons.ExceptionUtil;
 import coyote.commons.UriUtil;
 import coyote.commons.network.IpAddressException;
 import coyote.commons.network.IpNetwork;
@@ -40,8 +40,7 @@ import coyote.mbus.LogAppender;
  * 
  * <p>Instances of this class run in a NetworkService.</p>
  */
-public class MessageService implements NetworkServiceHandler
-{
+public class MessageService implements NetworkServiceHandler {
   ServerSocketChannel serverChannel = null;
 
   /** maps a SelectionKey -> bridge */
@@ -68,16 +67,13 @@ public class MessageService implements NetworkServiceHandler
 
 
 
-  public MessageService( final ServerSocketChannel ssc )
-  {
+
+  public MessageService( final ServerSocketChannel ssc ) {
     serverChannel = ssc;
 
-    try
-    {
+    try {
       serviceUri = new URI( "tcp://" + ssc.socket().getInetAddress().getHostAddress() + ":" + ssc.socket().getLocalPort() );
-    }
-    catch( final URISyntaxException e )
-    {
+    } catch ( final URISyntaxException e ) {
       // shouldn't happen
     }
 
@@ -93,10 +89,8 @@ public class MessageService implements NetworkServiceHandler
   /**
    * 
    */
-  public MessageService( final URI uri )
-  {
-    if( uri == null )
-    {
+  public MessageService( final URI uri ) {
+    if ( uri == null ) {
       throw new IllegalArgumentException( "Null URI passed to MicroBus Service" );
     }
 
@@ -114,26 +108,21 @@ public class MessageService implements NetworkServiceHandler
   /**
    * @see coyote.mbus.network.message.NetworkServiceHandler#accept(java.nio.channels.SelectionKey)
    */
-  public void accept( final SelectionKey key )
-  {
-    try
-    {
+  public void accept( final SelectionKey key ) {
+    try {
       final SocketChannel socketChannel = ( (ServerSocketChannel)key.channel() ).accept();
 
       // Use ACL to determine if the connection should be accepted
-      if( ACL.allows( socketChannel.socket().getInetAddress() ) )
-      {
+      if ( ACL.allows( socketChannel.socket().getInetAddress() ) ) {
         LOG.append( "Connection passed ACL check" );
         socketChannel.socket().setSendBufferSize( Bridge.SOCKET_BUFFER_SIZE );
         socketChannel.socket().setReceiveBufferSize( Bridge.SOCKET_BUFFER_SIZE );
         socketChannel.configureBlocking( false );
 
-        if( socketChannel != null )
-        {
+        if ( socketChannel != null ) {
 
           final Selector selector = key.selector();
-          synchronized( selector )
-          {
+          synchronized( selector ) {
             final SelectionKey clientKey = socketChannel.register( selector, SelectionKey.OP_READ );
             LOG.append( "Accepted connection from " + socketChannel.socket().getRemoteSocketAddress() );
 
@@ -151,27 +140,19 @@ public class MessageService implements NetworkServiceHandler
           }
 
         }
-      }
-      else
-      {
-        LOG.append( "Connection from "+socketChannel.socket().getInetAddress().toString() +" failed ACL check, closing connection." );
-        try
-        {
+      } else {
+        LOG.append( "Connection from " + socketChannel.socket().getInetAddress().toString() + " failed ACL check, closing connection." );
+        try {
           socketChannel.close();
-        }
-        catch( final Exception e )
-        {
+        } catch ( final Exception e ) {
           // ignored for closed socket
         }
         return;
       }
 
-    }
-    catch( final IOException e )
-    {
-      if( !shutdown )
-      {
-        ERR.append( "ERROR accepting connection: " + e.getClass().getName() + " - " + e.getMessage() + System.getProperty( "line.separator" ) + ChainedException.stackTrace( e ) );
+    } catch ( final IOException e ) {
+      if ( !shutdown ) {
+        ERR.append( "ERROR accepting connection: " + e.getClass().getName() + " - " + e.getMessage() + System.getProperty( "line.separator" ) + ExceptionUtil.stackTrace( e ) );
       }
     }
 
@@ -183,8 +164,7 @@ public class MessageService implements NetworkServiceHandler
   /**
    * @see coyote.mbus.network.message.NetworkServiceHandler#connect(java.nio.channels.SelectionKey)
    */
-  public void connect( final SelectionKey key )
-  {
+  public void connect( final SelectionKey key ) {
     LOG.append( "Connected to " + key.attachment() );
   }
 
@@ -194,8 +174,7 @@ public class MessageService implements NetworkServiceHandler
   /**
    * @see coyote.mbus.network.message.NetworkServiceHandler#getChannel()
    */
-  public AbstractSelectableChannel getChannel()
-  {
+  public AbstractSelectableChannel getChannel() {
     return serverChannel;
   }
 
@@ -205,8 +184,7 @@ public class MessageService implements NetworkServiceHandler
   /**
    * @see coyote.mbus.network.message.NetworkServiceHandler#getKey()
    */
-  public SelectionKey getKey()
-  {
+  public SelectionKey getKey() {
     return null;
   }
 
@@ -216,8 +194,7 @@ public class MessageService implements NetworkServiceHandler
   /**
    * @return  the serviceUri
    */
-  public URI getServiceUri()
-  {
+  public URI getServiceUri() {
     return serviceUri;
   }
 
@@ -227,8 +204,7 @@ public class MessageService implements NetworkServiceHandler
   /**
    * @see coyote.mbus.network.message.NetworkServiceHandler#initialize()
    */
-  public void initialize()
-  {
+  public void initialize() {
     shutdown = false;
   }
 
@@ -238,53 +214,41 @@ public class MessageService implements NetworkServiceHandler
   /**
    * @see coyote.mbus.network.NetworkServiceHandler#read(java.nio.channels.SelectionKey)
    */
-  public void read( final SelectionKey key )
-  {
+  public void read( final SelectionKey key ) {
     // read the data and pass it to the proper bridge
-    try
-    {
+    try {
       final int read = ( (SocketChannel)key.channel() ).read( readBuffer );
 
-      if( read > 0 )
-      {
+      if ( read > 0 ) {
         byte[] data;
         Packet frame = null;
 
         readBuffer.flip();
 
-        if( readBuffer.remaining() > 0 )
-        {
+        if ( readBuffer.remaining() > 0 ) {
           data = new byte[readBuffer.remaining()]; // allocate a byte array
 
           readBuffer.get( data ); // copy the data into the buffer
           readBuffer.clear(); // clear out the buffer
 
           LOG.append( "Receive TCP data:\n" + ByteUtil.dump( data ) );
-          try
-          {
+          try {
             frame = new Packet( data );
             LOG.append( frame.toString() );
-          }
-          catch( final Exception ex )
-          {
+          } catch ( final Exception ex ) {
             ERR.append( ex.getMessage() );
           }
         }
 
-      }
-      else if( read == -1 )
-      {
+      } else if ( read == -1 ) {
         throw new IOException( "Connection closed by peer." );
       }
 
-      if( readBuffer.remaining() == 0 )
-      {
+      if ( readBuffer.remaining() == 0 ) {
         readBuffer.flip();
       }
-    }
-    catch( final Exception e )
-    {
-      ERR.append( "Problems reading connection: " + e.getClass().getName() + " - " + e.getMessage() + System.getProperty( "line.separator" ) + PacketException.stackTrace( e ) );
+    } catch ( final Exception e ) {
+      ERR.append( "Problems reading connection: " + e.getClass().getName() + " - " + e.getMessage() + System.getProperty( "line.separator" ) + ExceptionUtil.stackTrace( e ) );
 
       cancelBridge( key );
 
@@ -295,28 +259,22 @@ public class MessageService implements NetworkServiceHandler
 
 
 
-  private void cancelBridge( final SelectionKey key )
-  {
+  private void cancelBridge( final SelectionKey key ) {
     // clean up key
-    try
-    {
+    try {
       // key.interestOps( 0 ); // is this really necessary?
       key.channel().close();
-    }
-    catch( final Exception ignore )
-    {
+    } catch ( final Exception ignore ) {
       // exceptions OK, closing
     }
-    finally
-    {
+    finally {
       key.cancel();
     }
 
     // remove the bridge;
     final Bridge bridge = (Bridge)bridges.remove( key );
 
-    if( bridge != null )
-    {
+    if ( bridge != null ) {
       bridge.close();
     }
   }
@@ -329,8 +287,7 @@ public class MessageService implements NetworkServiceHandler
    * 
    * @see coyote.mbus.network.NetworkServiceHandler#setChannel(java.nio.channels.spi.AbstractSelectableChannel)
    */
-  public void setChannel( final AbstractSelectableChannel channel )
-  {
+  public void setChannel( final AbstractSelectableChannel channel ) {
     serverChannel = (ServerSocketChannel)channel;
   }
 
@@ -340,9 +297,7 @@ public class MessageService implements NetworkServiceHandler
   /**
    * @see coyote.mbus.network.message.NetworkServiceHandler#setKey(java.nio.channels.SelectionKey)
    */
-  public void setKey( final SelectionKey key )
-  {
-  }
+  public void setKey( final SelectionKey key ) {}
 
 
 
@@ -350,8 +305,7 @@ public class MessageService implements NetworkServiceHandler
   /**
    * @see coyote.mbus.network.message.NetworkServiceHandler#shutdown()
    */
-  public void shutdown()
-  {
+  public void shutdown() {
     shutdown = true;
   }
 
@@ -361,8 +315,7 @@ public class MessageService implements NetworkServiceHandler
   /**
    * @see coyote.mbus.network.message.NetworkServiceHandler#write(java.nio.channels.SelectionKey)
    */
-  public void write( final SelectionKey key )
-  {
+  public void write( final SelectionKey key ) {
     LOG.append( "Writing" );
   }
 
@@ -372,9 +325,7 @@ public class MessageService implements NetworkServiceHandler
   /**
    * @see coyote.mbus.network.NetworkServiceHandler#fireGroupJoined(java.lang.String, coyote.mbus.network.MessageChannel)
    */
-  public void fireGroupJoined( final String group, final MessageChannel channel )
-  {
-  }
+  public void fireGroupJoined( final String group, final MessageChannel channel ) {}
 
 
 
@@ -382,17 +333,13 @@ public class MessageService implements NetworkServiceHandler
   /**
    * @see coyote.mbus.network.NetworkServiceHandler#fireGroupLeave(java.lang.String, coyote.mbus.network.MessageChannel)
    */
-  public void fireGroupLeave( final String group, final MessageChannel channel )
-  {
-  }
+  public void fireGroupLeave( final String group, final MessageChannel channel ) {}
 
 
 
 
-  public InetAddress getAddress()
-  {
-    if( serverChannel != null )
-    {
+  public InetAddress getAddress() {
+    if ( serverChannel != null ) {
       return serverChannel.socket().getInetAddress();
     }
 
@@ -402,10 +349,8 @@ public class MessageService implements NetworkServiceHandler
 
 
 
-  public int getPort()
-  {
-    if( serverChannel != null )
-    {
+  public int getPort() {
+    if ( serverChannel != null ) {
       return serverChannel.socket().getLocalPort();
     }
 
@@ -433,14 +378,10 @@ public class MessageService implements NetworkServiceHandler
    * 
    * @throws IpAddressException if the specified network is not valid.
    */
-  public void addAclEntry( final String network, final boolean allowed ) throws IpAddressException
-  {
-    if( "DEFAULT".equalsIgnoreCase( network ) )
-    {
+  public void addAclEntry( final String network, final boolean allowed ) throws IpAddressException {
+    if ( "DEFAULT".equalsIgnoreCase( network ) ) {
       ACL.setDefaultAllow( allowed );
-    }
-    else
-    {
+    } else {
       ACL.add( new IpNetwork( network ), allowed );
     }
   }
@@ -457,8 +398,7 @@ public class MessageService implements NetworkServiceHandler
    * 
    * @throws IpAddressException if the specified network is not valid.
    */
-  public void addAclEntry( final IpNetwork network, final boolean allowed )
-  {
+  public void addAclEntry( final IpNetwork network, final boolean allowed ) {
     ACL.add( network, allowed );
   }
 
@@ -487,8 +427,7 @@ public class MessageService implements NetworkServiceHandler
    *
    * @param rules A semicolon delimited list of rules
    */
-  public void addAclEntry( final String rule ) throws IpAddressException
-  {
+  public void addAclEntry( final String rule ) throws IpAddressException {
     ACL.parse( rule );
   }
 

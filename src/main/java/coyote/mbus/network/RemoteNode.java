@@ -20,6 +20,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.util.ArrayList;
 
+import coyote.commons.ExceptionUtil;
 import coyote.mbus.LogAppender;
 import coyote.mbus.NullLogAppender;
 import coyote.mbus.message.Message;
@@ -508,7 +509,7 @@ public class RemoteNode
                     }
                     catch( final Exception e )
                     {
-                      ERR.append( "Problems retransmitting packet #" + retval.sequence + " to " + endpointSocketAddress + " - " + e.getMessage() + "\n" + PacketException.stackTrace( e ) );
+                      ERR.append( "Problems retransmitting packet #" + retval.sequence + " to " + endpointSocketAddress + " - " + e.getMessage() + "\n" + ExceptionUtil.stackTrace( e ) );
                     }
 
                     // Get the next packet in the cache
@@ -529,7 +530,7 @@ public class RemoteNode
               }
               catch( final Exception e )
               {
-                ERR.append( "Could not process NAK " + packet + " for remote node " + remoteEndPoint + " at address " + endpointSocketAddress + " reason:" + e.getMessage() + "\n" + PacketException.stackTrace( e ) );
+                ERR.append( "Could not process NAK " + packet + " for remote node " + remoteEndPoint + " at address " + endpointSocketAddress + " reason:" + e.getMessage() + "\n" + ExceptionUtil.stackTrace( e ) );
               }
             }
             else
@@ -637,7 +638,7 @@ public class RemoteNode
     }
     catch( final Throwable t )
     {
-      ERR.append( "Could not process packet " + packet + " for remote node " + remoteEndPoint + " at address " + endpointSocketAddress + " reason:" + t.getMessage() + "\n" + PacketException.stackTrace( t ) );
+      ERR.append( "Could not process packet " + packet + " for remote node " + remoteEndPoint + " at address " + endpointSocketAddress + " reason:" + t.getMessage() + "\n" + ExceptionUtil.stackTrace( t ) );
     }
 
   } // processFrame

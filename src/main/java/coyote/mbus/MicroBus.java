@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import coyote.commons.StringUtil;
+import coyote.commons.ExceptionUtil;
 import coyote.commons.UriUtil;
 import coyote.commons.network.IpAddress;
 import coyote.commons.network.IpAddressException;
@@ -39,8 +39,7 @@ import coyote.mbus.network.RemoteNode;
  * The this class models a set of connectivity services for the exchange of 
  * messages across the network.
  */
-public class MicroBus implements MessageSink
-{
+public class MicroBus implements MessageSink {
   /** String used in various locations to identify this class. */
   public static final String CLASS_TAG = "MicroBus";
 
@@ -114,8 +113,7 @@ public class MicroBus implements MessageSink
   /**
    * This is where we initialize ourselves.
    */
-  public MicroBus()
-  {
+  public MicroBus() {
     final MicroBus mbus = this;
 
     // Share our lo appenders with the network service
@@ -123,22 +121,15 @@ public class MicroBus implements MessageSink
     SERVICE.setErrorAppender( ERR );
 
     // Add a shutdown hook into the JVM to help us shut everything down nicely
-    try
-    {
-      Runtime.getRuntime().addShutdownHook( new Thread( "mBusShutdown" )
-      {
-        public void run()
-        {
-          synchronized( MicroBus.CLASS_TAG )
-          {
+    try {
+      Runtime.getRuntime().addShutdownHook( new Thread( "mBusShutdown" ) {
+        public void run() {
+          synchronized( MicroBus.CLASS_TAG ) {
             mbus.shutdown();
           }
         }
       } );
-    }
-    catch( final Throwable ignoree )
-    {
-    }
+    } catch ( final Throwable ignoree ) {}
 
     // Create a reusable null message sink;
     NULL_SINK = new NullBus();
@@ -177,68 +168,54 @@ public class MicroBus implements MessageSink
    * 
    * <p>Once shut-down the service can not be restarted.</p>
    */
-  public void shutdown()
-  {
+  public void shutdown() {
 
     final StringBuffer line = new StringBuffer( "This is NOT an error, simply a diagnostic message showing what called this method\n" );
     line.append( "Thread \"" + Thread.currentThread().getName() + "\" is in the current call stack:\n" );
     final StackTraceElement[] stack = new Exception().fillInStackTrace().getStackTrace();
 
-    for( int x = 0; x < stack.length; x++ )
-    {
+    for ( int x = 0; x < stack.length; x++ ) {
       final StackTraceElement elem = stack[x];
       line.append( stack.length - x );
       line.append( " - " );
-      line.append( StringUtil.getLocalJavaName( elem.getClassName() ) );
+      line.append( ExceptionUtil.getLocalJavaName( elem.getClassName() ) );
       line.append( "." );
       line.append( elem.getMethodName() );
       line.append( "():" );
 
-      if( elem.getLineNumber() < 0 )
-      {
+      if ( elem.getLineNumber() < 0 ) {
         line.append( "Native Method" );
-      }
-      else
-      {
+      } else {
         line.append( elem.getLineNumber() );
       }
 
-      if( x + 1 < stack.length )
-      {
+      if ( x + 1 < stack.length ) {
         line.append( "\n" );
       }
     }
 
     LOG.append( line.toString() );
 
-    synchronized( SERVICE )
-    {
-      if( !shutdown )
-      {
+    synchronized( SERVICE ) {
+      if ( !shutdown ) {
         // place all the channels in a closed state, this places closure objects
         // in the inbound queues which signals the inbound sinks to shutdown.
-        for( int i = 0; i < channelList.size(); ( ( (MessageChannel)channelList.get( i++ ) ) ).close() )
-          ;
+        for ( int i = 0; i < channelList.size(); ( ( (MessageChannel)channelList.get( i++ ) ) ).close() );
 
         // wait for the bus to receive its closure object via its message channel
-        if( messageBus != null )
-        {
+        if ( messageBus != null ) {
           messageBus.shutdown();
           messageBus.join( 5000 );
         }
 
         shutdown = true;
-        try
-        {
+        try {
           // The service can not be restarted once it's shut down 
           SERVICE.destroy();
 
           messageBus = null;
           busChannel.destroy();
-        }
-        catch( final Throwable ignore )
-        {
-        }
+        } catch ( final Throwable ignore ) {}
 
       } // if !shutdown
 
@@ -257,11 +234,9 @@ public class MicroBus implements MessageSink
    *
    * @param channel The channel to manage.
    */
-  void addChannel( final MessageChannel channel )
-  {
+  void addChannel( final MessageChannel channel ) {
     // Add the given channel to the list of managed channels
-    synchronized( channelList )
-    {
+    synchronized( channelList ) {
       channel.setChannelId( nextChannelID++ );
       channelList.add( channel );
       channel.addListener( channelWatcher );
@@ -289,19 +264,15 @@ public class MicroBus implements MessageSink
    * 
    * @return A channel on which the client component can exchange data.
    */
-  public MessageChannel createChannel( final MessageSink inbound )
-  {
+  public MessageChannel createChannel( final MessageSink inbound ) {
 
     MessageChannel retval;
 
     // if there is a message bus component handling network traffic, create the 
     // channel within it otherwise, just create an 'unattached' channel.
-    if( messageBus != null )
-    {
+    if ( messageBus != null ) {
       retval = messageBus.createChannel( nextChannelID++ );
-    }
-    else
-    {
+    } else {
       retval = new MessageChannel();
     }
 
@@ -313,8 +284,7 @@ public class MicroBus implements MessageSink
 
     // Add the new channel to the list of managed channels. It is not added 
     // with the addChannel method because the channel identifier is set here.
-    synchronized( channelList )
-    {
+    synchronized( channelList ) {
       channelList.add( retval );
     }
 
@@ -340,8 +310,7 @@ public class MicroBus implements MessageSink
    *
    * @return Return a managed channel with a 'null' inbound sink.
    */
-  public MessageChannel createChannel()
-  {
+  public MessageChannel createChannel() {
     return createChannel( new NullSink() );
   }
 
@@ -359,16 +328,15 @@ public class MicroBus implements MessageSink
    * 
    * @throws IllegalArgumentException if no message group is set in the message
    */
-  public void send(Message msg, String group)
-  {
+  public void send( Message msg, String group ) {
     // if a group was specified, use place it in the message
-    if (group != null && group.trim().length()>0 )
+    if ( group != null && group.trim().length() > 0 )
       msg.setGroup( group.trim() );
 
     // Mak sure there is a group specified in the message before sending it
-    if( msg.getGroup() == null || msg.getGroup().trim().length()==0) 
-      throw new IllegalArgumentException("No group specified for message");
-    
+    if ( msg.getGroup() == null || msg.getGroup().trim().length() == 0 )
+      throw new IllegalArgumentException( "No group specified for message" );
+
     // Send the message on the public channel
     publicChannel.send( msg );
   }
@@ -386,8 +354,7 @@ public class MicroBus implements MessageSink
    * 
    * @throws IllegalArgumentException if no message group is set in the message
    */
-  public void send( Message msg )
-  {
+  public void send( Message msg ) {
     // send the message as it is with no group override
     this.send( msg, null );
   }
@@ -408,8 +375,7 @@ public class MicroBus implements MessageSink
    * 
    * @return a message queue
    */
-  public MessageQueueChannel createQueueChannel( final MessageSink inbound )
-  {
+  public MessageQueueChannel createQueueChannel( final MessageSink inbound ) {
     return new MessageQueueChannel( createChannel( null ) );
   }
 
@@ -428,55 +394,43 @@ public class MicroBus implements MessageSink
    * 
    * @see coyote.mbus.MessageSink#onMessage(coyote.mbus.message.Message)
    */
-  public void onMessage( final Message message )
-  {
-    if( shutdown )
-    {
+  public void onMessage( final Message message ) {
+    if ( shutdown ) {
       throw new IllegalStateException( "Can not handle message, this is in a shutdown state" );
     }
 
     // send it over the bus channel over the network or through loopback
-    if( message.sourceChannel != busChannel )
-    {
+    if ( message.sourceChannel != busChannel ) {
       busChannel.send( message );
     }
 
     // Get the target address to see if it is a directed message
     final MessageAddress target = ( message ).getTarget();
 
-    if( target != null )
-    {
+    if ( target != null ) {
       LOG.append( "Received targeted message: " + target.toString() );
 
       // This is a directed message ignore it unless it is for this endpoint
       // if the endpoint is negative
-      if( ( messageBus != null ) && ( target.getEndPoint() == messageBus.endpoint ) )
-      {
+      if ( ( messageBus != null ) && ( target.getEndPoint() == messageBus.endpoint ) ) {
         LOG.append( "Message targeted for this endpoint" );
 
-        if( target.getChannelId() > -1 )
-        {
+        if ( target.getChannelId() > -1 ) {
           LOG.append( "Message targeted for channel " + target.getChannelId() );
 
-          for( int i = 0; i < channelList.size(); i++ )
-          {
+          for ( int i = 0; i < channelList.size(); i++ ) {
             final MessageChannel channel = (MessageChannel)channelList.get( i );
-            if( target.getChannelId() == channel.getChannelId() )
-            {
+            if ( target.getChannelId() == channel.getChannelId() ) {
               channel.receive( message );
               return;
             }
           }
           ERR.append( "Could not deliver directed message to " + target + " - channel " + target.getChannelId() + " does not exist" );
-        }
-        else
-        {
+        } else {
           LOG.append( "Message targeted for all channels in this endpoint" );
-          for( int i = 0; i < channelList.size(); i++ )
-          {
+          for ( int i = 0; i < channelList.size(); i++ ) {
             final MessageChannel channel = (MessageChannel)channelList.get( i );
-            if( channel.matchGroup( message.getGroup() ) && ( channel != ( message ).sourceChannel ) )
-            {
+            if ( channel.matchGroup( message.getGroup() ) && ( channel != ( message ).sourceChannel ) ) {
               channel.receive( (Message)message.clone() );
             }
 
@@ -487,20 +441,17 @@ public class MicroBus implements MessageSink
       } // not our endpoint
 
     } // Target !null
-    else
-    {
+    else {
       LOG.append( "Message has no target passing to all (" + channelList.size() + ") channels in the list" );
       // This is a group message, so route it to all group members. It does not 
       // need to be synchronized, because the list is not being changed, only 
       // accessed.        
-      for( int i = 0; i < channelList.size(); i++ )
-      {
+      for ( int i = 0; i < channelList.size(); i++ ) {
         final MessageChannel channel = (MessageChannel)channelList.get( i );
 
         // send the message only to those channels interested in the group and 
         // those that are not the origination of the message
-        if( channel.matchGroup( message.getGroup() ) && ( channel != message.sourceChannel ) )
-        {
+        if ( channel.matchGroup( message.getGroup() ) && ( channel != message.sourceChannel ) ) {
           // Create a copy of the Message and place it in the channel
           channel.receive( (Message)message.clone() );
         }
@@ -517,10 +468,8 @@ public class MicroBus implements MessageSink
   /**
    * @return the number of messages still in the outbound message queue
    */
-  public int getOutboundQueueDepth()
-  {
-    if( messageBus != null )
-    {
+  public int getOutboundQueueDepth() {
+    if ( messageBus != null ) {
       return messageBus.getOutboundQueueDepth();
     }
     return -1;
@@ -534,13 +483,10 @@ public class MicroBus implements MessageSink
    * 
    * @return the current list of remote nodes. 
    */
-  List<RemoteNode> getRemoteNodes()
-  {
+  List<RemoteNode> getRemoteNodes() {
     final ArrayList<RemoteNode> retval = new ArrayList<RemoteNode>();
-    if( messageBus != null )
-    {
-      for( final Iterator<RemoteNode> it = messageBus.getRemoteNodeIterator(); it.hasNext(); retval.add( it.next() ) )
-        ;
+    if ( messageBus != null ) {
+      for ( final Iterator<RemoteNode> it = messageBus.getRemoteNodeIterator(); it.hasNext(); retval.add( it.next() ) );
     }
     return retval;
   }
@@ -552,16 +498,12 @@ public class MicroBus implements MessageSink
    * @return Return a list of messages that describe the currently known remote
    *         nodes
    */
-  public List<Message> getRemoteNodeMessages()
-  {
+  public List<Message> getRemoteNodeMessages() {
     final ArrayList<Message> retval = new ArrayList<Message>();
-    if( messageBus != null )
-    {
-      for( final Iterator<RemoteNode> it = messageBus.getRemoteNodeIterator(); it.hasNext(); )
-      {
+    if ( messageBus != null ) {
+      for ( final Iterator<RemoteNode> it = messageBus.getRemoteNodeIterator(); it.hasNext(); ) {
         final Message nodeMessage = OamMessage.createNodePacket( it.next() );
-        if( nodeMessage != null )
-        {
+        if ( nodeMessage != null ) {
           retval.add( nodeMessage );
         }
       }
@@ -575,8 +517,7 @@ public class MicroBus implements MessageSink
   /**
    * @return  True if the this framework is not operational for any reason;   false indicates messages are being exchanged.
    */
-  public boolean isShutdown()
-  {
+  public boolean isShutdown() {
     return shutdown;
   }
 
@@ -596,12 +537,9 @@ public class MicroBus implements MessageSink
    * implementation of the Null Object design pattern, a.k.a. Active Nothing 
    * and Stub pattern.
    */
-  class NullBus implements MessageSink
-  {
+  class NullBus implements MessageSink {
     /** Default constructor */
-    NullBus()
-    {
-    }
+    NullBus() {}
 
 
 
@@ -611,8 +549,7 @@ public class MicroBus implements MessageSink
      * 
      * @see coyote.mbus.MessageSink#onMessage(coyote.mbus.message.Message)
      */
-    public void onMessage( final Message message )
-    {
+    public void onMessage( final Message message ) {
       // silently ignore the message
       LOG.append( "NullBus (not so silently) consuming message" );
     }
@@ -625,8 +562,7 @@ public class MicroBus implements MessageSink
   /**
    * @return the NetworkService running the network services.
    */
-  NetworkService getLocalNode()
-  {
+  NetworkService getLocalNode() {
     return SERVICE;
   }
 
@@ -645,38 +581,29 @@ public class MicroBus implements MessageSink
    * 
    * @param millis How long to wait for the bus to become operational.
    */
-  public void waitForBus( final long millis )
-  {
+  public void waitForBus( final long millis ) {
     final long end = System.currentTimeMillis() + millis;
 
     // The service thread should always be running in the background
     SERVICE.waitForActive( millis );
 
     final long remain = end - System.currentTimeMillis();
-    if( remain > 0 )
-    {
+    if ( remain > 0 ) {
       // determine the timeout sentinel value
       final long tout = System.currentTimeMillis() + remain;
 
       // While we have not reached the sentinel time
-      while( tout >= System.currentTimeMillis() )
-      {
+      while ( tout >= System.currentTimeMillis() ) {
         // If we have a Bus and it is ready, break
-        if( ( messageBus != null ) && messageBus.isReady() )
-        {
+        if ( ( messageBus != null ) && messageBus.isReady() ) {
           break;
         }
 
         // wait around for a while
-        synchronized( this )
-        {
-          try
-          {
+        synchronized( this ) {
+          try {
             this.wait( 10 );
-          }
-          catch( final Throwable ignore )
-          {
-          }
+          } catch ( final Throwable ignore ) {}
         }
       } // while !timed-out
     } // if there is time left after waiting for the SERVICE to init
@@ -685,10 +612,8 @@ public class MicroBus implements MessageSink
 
 
 
-  public boolean isReady()
-  {
-    if( messageBus != null )
-    {
+  public boolean isReady() {
+    if ( messageBus != null ) {
       // return the readiness of the bus
       return messageBus.isReady();
     }
@@ -706,8 +631,7 @@ public class MicroBus implements MessageSink
    * @param flag True enables diagnostic messages, false disables messages to 
    *        the console
    */
-  public synchronized void enableLogging( final boolean enabled )
-  {
+  public synchronized void enableLogging( final boolean enabled ) {
     LOG.setEnabled( enabled );
     ERR.setEnabled( enabled );
   }
@@ -745,23 +669,18 @@ public class MicroBus implements MessageSink
    * @param allowed The flag indicating whether or not TCP connections from the 
    *        specified network will be accepted.
    */
-  public void addAclEntry( final IpNetwork net, final boolean allow )
-  {
+  public void addAclEntry( final IpNetwork net, final boolean allow ) {
     messageService.addAclEntry( net, allow );
   }
 
 
 
 
-  public IpAddress getTcpAddress()
-  {
+  public IpAddress getTcpAddress() {
     waitForBus( 1000 );
-    try
-    {
+    try {
       return new IpAddress( messageService.getAddress() );
-    }
-    catch( final IpAddressException e )
-    {
+    } catch ( final IpAddressException e ) {
       return IpInterface.getPrimary().getAddress();
     }
   }
@@ -769,15 +688,11 @@ public class MicroBus implements MessageSink
 
 
 
-  public int getTcpPort()
-  {
-    if( messageBus != null )
-    {
+  public int getTcpPort() {
+    if ( messageBus != null ) {
       waitForBus( 1000 );
       return messageService.getPort();
-    }
-    else
-    {
+    } else {
       return -1;
     }
   }
@@ -785,15 +700,11 @@ public class MicroBus implements MessageSink
 
 
 
-  public long getEndpoint()
-  {
-    if( messageBus != null )
-    {
+  public long getEndpoint() {
+    if ( messageBus != null ) {
       waitForBus( 1000 );
       return messageBus.endpoint;
-    }
-    else
-    {
+    } else {
       return -1;
     }
   }
@@ -801,20 +712,15 @@ public class MicroBus implements MessageSink
 
 
 
-  public void finalize() throws Throwable
-  {
+  public void finalize() throws Throwable {
     shutdown = true;
-    try
-    {
+    try {
       SERVICE.destroy();
       messageBus = null;
       busChannel.destroy();
       busChannel = null;
       messageService = null;
-    }
-    catch( final Throwable ignore )
-    {
-    }
+    } catch ( final Throwable ignore ) {}
 
   }
 
@@ -826,82 +732,58 @@ public class MicroBus implements MessageSink
    * 
    * <p>This will cause this node to generate a new endpoint identifier.</p>
    */
-  public synchronized void open()
-  {
+  public synchronized void open() {
 
     // If this is not open yet
-    if( !busIsOpen )
-    {
+    if ( !busIsOpen ) {
       busIsOpen = true;
 
       LOG.append( "Opening bus..." );
 
       // if the bus has not been opened previously
-      if( busChannel.outSink instanceof NullBus )
-      {
+      if ( busChannel.outSink instanceof NullBus ) {
         // create network facilities...
-        if( ( bindAddress == null ) || ( netMask == null ) )
-        {
+        if ( ( bindAddress == null ) || ( netMask == null ) ) {
           // Get the primary interface to which we should bind our services
           final IpInterface ipInterface = IpInterface.getPrimary();
           LOG.append( "BindAddr:" + bindAddress + " NetMask:" + netMask + " - using a primary interface of " + ipInterface );
 
-          if( ipInterface == null )
-          {
+          if ( ipInterface == null ) {
             ERR.append( "Could not get a default interface on this host, will attempt to find the address of this host via DNS" );
-            try
-            {
+            try {
               bindAddress = new IpAddress( InetAddress.getLocalHost() );
-            }
-            catch( final IpAddressException e )
-            {
+            } catch ( final IpAddressException e ) {
               // should not happen but complain just in case it does
               ERR.append( "Could not find this hosts address via DNS: " + e.getMessage() + " - Trying the loopback address" );
-            }
-            catch( final UnknownHostException e2 )
-            {
-              try
-              {
+            } catch ( final UnknownHostException e2 ) {
+              try {
                 bindAddress = new IpAddress( "127.0.0.1" );
-              }
-              catch( final IpAddressException e )
-              {
+              } catch ( final IpAddressException e ) {
                 ERR.append( "Could not resolve the loopback address to this host; networking appears to be disabled - " + e.getMessage() );
               }
             }
 
-          }
-          else
-          {
+          } else {
             LOG.append( "BindAddr:" + bindAddress + " NetMask:" + netMask + " - using a primary interface of " + ipInterface );
 
             bindAddress = ipInterface.getAddress();
           }
 
-          if( netMask == null )
-          {
-            if( bindAddress != null )
-            {
+          if ( netMask == null ) {
+            if ( bindAddress != null ) {
               final IpInterface ipi = IpInterface.getInterface( bindAddress );
-              if( ipi != null )
-              {
+              if ( ipi != null ) {
                 netMask = ipi.getNetmask();
-              }
-              else
-              {
+              } else {
                 ERR.append( "Could not retrieve the network interface for the address of " + bindAddress + " using a default mask" );
               }
             }
 
             // If all else fails, use the default
-            if( netMask == null )
-            {
-              try
-              {
+            if ( netMask == null ) {
+              try {
                 netMask = new IpAddress( MessageBus.DEFAULT_NETMASK );
-              }
-              catch( final IpAddressException e )
-              {
+              } catch ( final IpAddressException e ) {
                 // should not happen
                 e.printStackTrace();
               }
@@ -915,33 +797,24 @@ public class MicroBus implements MessageSink
         // Create a Service handler
         final ServerSocketChannel ssc = NetworkService.getNextServerSocket( bindAddress.toInetAddress(), bindPort );
 
-        if( ssc != null )
-        {
+        if ( ssc != null ) {
           LOG.append( "Using TCP service of " + ssc.socket().getLocalSocketAddress() );
           messageService = new MessageService( ssc );
           LOG.append( "messageService=" + messageService.getServiceUri() );
-        }
-        else
-        {
+        } else {
           ERR.append( "Problems obtaining a server socket channel - " + bindAddress + " on port " + bindPort );
         }
 
         LOG.append( "Adding TCP to service" );
 
-        if( SERVICE.isActive() )
-        {
+        if ( SERVICE.isActive() ) {
           // add the TCP handler to the already active thread.
-          try
-          {
+          try {
             SERVICE.add( messageService );
-          }
-          catch( final NetworkServiceException e )
-          {
+          } catch ( final NetworkServiceException e ) {
             ERR.append( "Problems adding TCP service to currently active node: " + e.getMessage() );
           }
-        }
-        else
-        {
+        } else {
           LOG.append( "Staging TCP in service for later startup" );
 
           // Stage the TCP service so it is ready to initialize
@@ -968,29 +841,22 @@ public class MicroBus implements MessageSink
 
         // If we have a good netmask, set it here so our messages will be routed
         // to the entire subnet and not blocked at the first router interface
-        if( netMask != null )
-        {
+        if ( netMask != null ) {
           messageBus.setNetmask( netMask.toString() );
         }
         LOG.append( "Bus broadcast address is " + messageBus.getBcastaddr() );
 
         LOG.append( "Including bus handler " + messageBus + " in node" );
 
-        if( SERVICE.isActive() )
-        {
+        if ( SERVICE.isActive() ) {
           LOG.append( "Adding bus handler to service" );
           // add the UDP handler to the already active thread.
-          try
-          {
+          try {
             SERVICE.add( messageBus );
-          }
-          catch( final NetworkServiceException e )
-          {
+          } catch ( final NetworkServiceException e ) {
             ERR.append( "Problems adding UDP service to currently active node: " + e.getMessage() );
           }
-        }
-        else
-        {
+        } else {
           LOG.append( "Staging bus handler in service for later startup" );
 
           // Stage the bus in the network service thread
@@ -1002,8 +868,7 @@ public class MicroBus implements MessageSink
       LOG.append( "Initial open call completed" );
 
     } // if opencount == 0
-    else
-    {
+    else {
       ERR.append( "mBus already open" );
     }
 
@@ -1018,32 +883,25 @@ public class MicroBus implements MessageSink
    * <p>Messages are still passed within the runtime, but messages remain 
    * local.</p>
    */
-  public synchronized void close()
-  {
+  public synchronized void close() {
 
     // If we have been closed as many times as we have been opened...
-    if( busIsOpen )
-    {
+    if ( busIsOpen ) {
       LOG.append( "Terminating services" );
 
       // Stop and remove the TCP service
-      if( messageService != null )
-      {
+      if ( messageService != null ) {
         messageService.shutdown();
-        try
-        {
+        try {
           SERVICE.removeHandler( messageService );
-        }
-        catch( final NetworkServiceException e )
-        {
+        } catch ( final NetworkServiceException e ) {
           LOG.append( "Problems closing TCP service: " + e.getMessage() );
         }
 
         messageService = null;
       }
 
-      if( busChannel != null )
-      {
+      if ( busChannel != null ) {
         busChannel.outSink = NULL_SINK;
       }
 
@@ -1053,24 +911,21 @@ public class MicroBus implements MessageSink
 
 
 
-  public void openBridge( final IpAddress addr, final int port )
-  {
+  public void openBridge( final IpAddress addr, final int port ) {
     // TODO open a bridge to the given address and port
   }
 
 
 
 
-  public void closeBridge( final IpAddress addr, final int port )
-  {
+  public void closeBridge( final IpAddress addr, final int port ) {
     // TODO close the bridge to the given address and port
   }
 
 
 
 
-  public void closeBridges( final IpAddress addr )
-  {
+  public void closeBridges( final IpAddress addr ) {
     // TODO close all bridges to the given address
   }
 
@@ -1085,15 +940,12 @@ public class MicroBus implements MessageSink
    * @throws IllegalStateException if the node has already been opened.
    * @throws IllegalArgumentException if the argument is out of range (0-65534)
    */
-  public void setPort( final int port )
-  {
-    if( busIsOpen )
-    {
+  public void setPort( final int port ) {
+    if ( busIsOpen ) {
       throw new IllegalStateException( "this is already open, cannot set port" );
     }
 
-    if( ( port < 0 ) || ( port > 0xFFFF ) )
-    {
+    if ( ( port < 0 ) || ( port > 0xFFFF ) ) {
       throw new IllegalArgumentException( "Port argument is out of range (0-65534)" );
     }
 
@@ -1106,8 +958,7 @@ public class MicroBus implements MessageSink
   /**
    * @param bindAddress  the bindAddress to set
    */
-  public void setBindAddress( final IpAddress addr )
-  {
+  public void setBindAddress( final IpAddress addr ) {
     bindAddress = addr;
   }
 
@@ -1117,8 +968,7 @@ public class MicroBus implements MessageSink
   /**
    * @param netMask  the netMask to set
    */
-  public void setNetMask( final IpAddress addr )
-  {
+  public void setNetMask( final IpAddress addr ) {
     netMask = addr;
   }
 
@@ -1135,14 +985,11 @@ public class MicroBus implements MessageSink
   /**
    * The ChannelWatcher class performs basic functions when channels do things.
    */
-  class ChannelWatcher implements MessageChannelListener
-  {
+  class ChannelWatcher implements MessageChannelListener {
     /**
      * @see coyote.mbus.MessageChannelListener#channelConnect(coyote.mbus.network.MessageChannel)
      */
-    public void channelConnect( final MessageChannel channel )
-    {
-    }
+    public void channelConnect( final MessageChannel channel ) {}
 
 
 
@@ -1150,9 +997,7 @@ public class MicroBus implements MessageSink
     /**
      * @see coyote.mbus.MessageChannelListener#channelDisconnect(coyote.mbus.network.MessageChannel)
      */
-    public void channelDisconnect( final MessageChannel channel )
-    {
-    }
+    public void channelDisconnect( final MessageChannel channel ) {}
 
 
 
@@ -1160,9 +1005,7 @@ public class MicroBus implements MessageSink
     /**
      * @see coyote.mbus.MessageChannelListener#channelReceive(coyote.mbus.network.MessageChannel)
      */
-    public void channelReceive( final MessageChannel channel )
-    {
-    }
+    public void channelReceive( final MessageChannel channel ) {}
 
 
 
@@ -1170,9 +1013,7 @@ public class MicroBus implements MessageSink
     /**
      * @see coyote.mbus.MessageChannelListener#channelSend(coyote.mbus.network.MessageChannel)
      */
-    public void channelSend( final MessageChannel channel )
-    {
-    }
+    public void channelSend( final MessageChannel channel ) {}
 
 
 
@@ -1180,9 +1021,7 @@ public class MicroBus implements MessageSink
     /**
      * @see coyote.mbus.MessageChannelListener#channelStop(java.lang.String, coyote.mbus.network.MessageChannel)
      */
-    public void channelStop( final String group, final MessageChannel channel )
-    {
-    }
+    public void channelStop( final String group, final MessageChannel channel ) {}
 
 
 
@@ -1190,9 +1029,7 @@ public class MicroBus implements MessageSink
     /**
      * @see coyote.mbus.MessageChannelListener#channelJoined(java.lang.String, coyote.mbus.network.MessageChannel)
      */
-    public void channelJoined( final String group, final MessageChannel channel )
-    {
-    }
+    public void channelJoined( final String group, final MessageChannel channel ) {}
 
 
 
@@ -1200,9 +1037,7 @@ public class MicroBus implements MessageSink
     /**
      * @see coyote.mbus.MessageChannelListener#channelLeft(java.lang.String, coyote.mbus.network.MessageChannel)
      */
-    public void channelLeft( final String group, final MessageChannel channel )
-    {
-    }
+    public void channelLeft( final String group, final MessageChannel channel ) {}
 
   } // class ChannelWatcher
 

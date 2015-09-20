@@ -15,7 +15,7 @@ import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import coyote.commons.StringUtil;
+import coyote.commons.ExceptionUtil;
 
 /**
  * 
@@ -99,7 +99,7 @@ public class DefaultLogAppender implements LogAppender
 
       final StackTraceElement[] stack = new Exception().fillInStackTrace().getStackTrace();
       final StackTraceElement elem = stack[2];
-      logBuffer.append( StringUtil.getLocalJavaName( elem.getClassName() ) );
+      logBuffer.append( ExceptionUtil.getLocalJavaName( elem.getClassName() ) );
       logBuffer.append( "." );
       logBuffer.append( elem.getMethodName() );
       logBuffer.append( "():" );

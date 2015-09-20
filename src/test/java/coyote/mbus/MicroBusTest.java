@@ -17,11 +17,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import coyote.commons.ExceptionUtil;
 import coyote.commons.network.IpAddress;
 import coyote.commons.network.IpAddressException;
 import coyote.commons.network.IpNetwork;
 import coyote.mbus.message.Message;
-import coyote.mbus.message.MessageException;
 import coyote.mbus.network.MessageChannel;
 import coyote.mbus.network.MessageSession;
 
@@ -29,8 +29,7 @@ import coyote.mbus.network.MessageSession;
 /**
  * 
  */
-public class MicroBusTest
-{
+public class MicroBusTest {
   MicroBus mbus = null;
 
 
@@ -40,8 +39,7 @@ public class MicroBusTest
    * @throws java.lang.Exception
    */
   @Before
-  public void setUp() throws Exception
-  {
+  public void setUp() throws Exception {
     mbus = new MicroBus();
     mbus.enableLogging( true );
   }
@@ -53,8 +51,7 @@ public class MicroBusTest
    * @throws java.lang.Exception
    */
   @After
-  public void tearDown() throws Exception
-  {
+  public void tearDown() throws Exception {
     mbus.close();
     mbus = null;
   }
@@ -66,8 +63,7 @@ public class MicroBusTest
    * Test method for {@link coyote.mbus.MicroBus#getLocalNode()}.
    */
   @Test
-  public void differentPort()
-  {
+  public void differentPort() {
     // Set the default port to 54321
     mbus.setPort( 54321 );
     mbus.open();
@@ -81,12 +77,9 @@ public class MicroBusTest
     System.out.println( "Listening to network packets" );
 
     // run for 5 seconds
-    try
-    {
+    try {
       Thread.sleep( 5000 );
-    }
-    catch( final InterruptedException e )
-    {
+    } catch ( final InterruptedException e ) {
       e.printStackTrace();
     }
 
@@ -103,8 +96,7 @@ public class MicroBusTest
    * messages.
    */
   @Test
-  public void simpleSendTest()
-  {
+  public void simpleSendTest() {
     Message msg = new Message();
     msg.setGroup( "OpenTopic" );
     msg.add( "MyField", "MyValue" );
@@ -118,21 +110,17 @@ public class MicroBusTest
 
 
   //@Test
-  public void testPrivateGroup()
-  {
+  public void testPrivateGroup() {
     final MessageChannel channel = mbus.createChannel( new MessageHandler() );
 
     final String privateGroup = channel.createPrivateGroup();
     System.out.println( "Our private group name is '" + privateGroup + "'" );
     channel.join( privateGroup );
 
-    try
-    {
+    try {
       // try to join a group name not created by this transport
       channel.join( privateGroup + ".XXX" );
-    }
-    catch( final RuntimeException e )
-    {
+    } catch ( final RuntimeException e ) {
       System.out.println( "Private group names are really private: '" + e.getMessage() + "'" );
     }
 
@@ -142,8 +130,7 @@ public class MicroBusTest
 
 
   //@Test
-  public void privateBus()
-  {
+  public void privateBus() {
     // The MicroBus defaults to a delivery context limited to the JRE. Messages 
     // are only passed to the network if properly configured and the open() 
     // method is called. To keep the message passing limited to the JRE, simply 
@@ -171,8 +158,7 @@ public class MicroBusTest
 
 
   //@Test
-  public void simpleSession()
-  {
+  public void simpleSession() {
     mbus.enableLogging( true );
     mbus.open();
 
@@ -188,8 +174,7 @@ public class MicroBusTest
     // to push packets received from the network to the packet sink.
     final MessageSession session = new MessageSession( new MessageHandler() );
 
-    try
-    {
+    try {
       // Create a URI which represents this hosts MicroBus TCP service
       final URI serviceUri = new URI( "tcp://" + mbus.getTcpAddress() + ":" + mbus.getTcpPort() );
 
@@ -209,8 +194,7 @@ public class MicroBusTest
 
       System.out.println( "Publishing to 'Login'" );
 
-      for( int i = 0; i < 1; i++ )
-      {
+      for ( int i = 0; i < 1; i++ ) {
         final Message msg = new Message();
         msg.add( "ACTION", "LOGIN" );
         msg.add( "Account", "bob" );
@@ -221,13 +205,10 @@ public class MicroBusTest
       }
 
       Thread.sleep( 1000 );
+    } catch ( final Exception e ) {
+      System.err.println( "Error: " + e.getMessage() + "\r\n" + ExceptionUtil.stackTrace( e ) );
     }
-    catch( final Exception e )
-    {
-      System.err.println( "Error: " + e.getMessage() + "\r\n" + MessageException.stackTrace( e ) );
-    }
-    finally
-    {
+    finally {
       // Disconnect from the service
       System.out.println( "Disconnecting..." );
       session.disconnect();
@@ -245,30 +226,23 @@ public class MicroBusTest
    * are to be placed on one subnet and the rest on another.   
    */
   //@Test
-  public void specificBind()
-  {
+  public void specificBind() {
     mbus.enableLogging( true );
 
     // Set the default port to 54321
     mbus.setPort( 54321 );
 
     // Set the bind address to a specific IP address
-    try
-    {
+    try {
       mbus.setBindAddress( new IpAddress( "192.168.100.101" ) );
-    }
-    catch( IpAddressException e )
-    {
+    } catch ( IpAddressException e ) {
       e.printStackTrace();
     }
 
     // Set the netmask to a specific mask
-    try
-    {
+    try {
       mbus.setNetMask( new IpAddress( "255.0.0.0" ) );
-    }
-    catch( IpAddressException e )
-    {
+    } catch ( IpAddressException e ) {
       e.printStackTrace();
     }
 
@@ -283,12 +257,9 @@ public class MicroBusTest
     channel.join( ">" );
 
     // run for 2 minutes
-    try
-    {
+    try {
       Thread.sleep( 120000 );
-    }
-    catch( final InterruptedException e )
-    {
+    } catch ( final InterruptedException e ) {
       e.printStackTrace();
     }
 
