@@ -631,9 +631,9 @@ public class MicroBus implements MessageSink {
    * @param flag True enables diagnostic messages, false disables messages to 
    *        the console
    */
-  public synchronized void enableLogging( final boolean enabled ) {
-    LOG.setEnabled( enabled );
-    ERR.setEnabled( enabled );
+  public synchronized void enableLogging( final boolean flag ) {
+    LOG.setEnabled( flag );
+    ERR.setEnabled( flag );
   }
 
 
@@ -669,8 +669,8 @@ public class MicroBus implements MessageSink {
    * @param allowed The flag indicating whether or not TCP connections from the 
    *        specified network will be accepted.
    */
-  public void addAclEntry( final IpNetwork net, final boolean allow ) {
-    messageService.addAclEntry( net, allow );
+  public void addAclEntry( final IpNetwork network, final boolean allowed ) {
+    messageService.addAclEntry( network, allowed );
   }
 
 
@@ -956,7 +956,7 @@ public class MicroBus implements MessageSink {
 
 
   /**
-   * @param bindAddress  the bindAddress to set
+   * @param addr  the bindAddress to set
    */
   public void setBindAddress( final IpAddress addr ) {
     bindAddress = addr;
@@ -966,7 +966,7 @@ public class MicroBus implements MessageSink {
 
 
   /**
-   * @param netMask  the netMask to set
+   * @param addr  the netMask to set
    */
   public void setNetMask( final IpAddress addr ) {
     netMask = addr;
@@ -1018,9 +1018,6 @@ public class MicroBus implements MessageSink {
 
 
 
-    /**
-     * @see coyote.mbus.MessageChannelListener#channelStop(java.lang.String, coyote.mbus.network.MessageChannel)
-     */
     public void channelStop( final String group, final MessageChannel channel ) {}
 
 

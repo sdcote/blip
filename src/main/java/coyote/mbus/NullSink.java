@@ -13,6 +13,7 @@ package coyote.mbus;
 
 import coyote.mbus.message.Message;
 
+
 /**
  * An implementation of a message sink which does nothing with the message.
  * 
@@ -20,8 +21,7 @@ import coyote.mbus.message.Message;
  * running the risk of messages being queues up with nothing to process
  * them.</p>
  */
-public class NullSink implements MessageSink
-{
+public class NullSink implements MessageSink {
 
   /**
    * Completely ignore the message.
@@ -29,9 +29,8 @@ public class NullSink implements MessageSink
    * @see coyote.mbus.MessageSink#onMessage(coyote.mbus.message.Message)
    */
   @Override
-  public void onMessage( Message msg )
-  {
-// Do Nothing
+  public void onMessage( Message msg ) {
+    // Do Nothing
   }
 
 }

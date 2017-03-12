@@ -13,6 +13,7 @@ package coyote.mbus;
 
 import coyote.mbus.network.MessageChannel;
 
+
 /**
  * An interface used to inform interested entities when the state of a Message
  * Channel has changed.
@@ -20,8 +21,7 @@ import coyote.mbus.network.MessageChannel;
  * <p>An observer can use this interface to be notified when messages arrive 
  * when a blocking wait for a message to arrive is not acceptable.</p> 
  */
-public interface MessageChannelListener
-{
+public interface MessageChannelListener {
 
   /**
    * Called when the MessageChannel joins a group.

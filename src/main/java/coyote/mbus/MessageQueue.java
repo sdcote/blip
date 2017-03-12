@@ -20,8 +20,7 @@ import coyote.mbus.message.Message;
  * MessageQueue models a queue that holds messages for handling by another 
  * component, like a dispatcher.
  */
-public class MessageQueue
-{
+public class MessageQueue {
 
   /**
    * Field list
@@ -34,9 +33,7 @@ public class MessageQueue
   /**
    * Constructor MessageQueue
    */
-  public MessageQueue()
-  {
-  }
+  public MessageQueue() {}
 
 
 
@@ -44,12 +41,10 @@ public class MessageQueue
   /**
    * Adds the given Message to the end of the queue as in an append operation.
    *
-   * @param message
+   * @param msg
    */
-  public void add( final Message msg )
-  {
-    synchronized( list )
-    {
+  public void add( final Message msg ) {
+    synchronized( list ) {
       list.add( msg );
       list.notify();
     }
@@ -65,10 +60,8 @@ public class MessageQueue
    *
    * @param message
    */
-  public void addFirst( final Message message )
-  {
-    synchronized( list )
-    {
+  public void addFirst( final Message message ) {
+    synchronized( list ) {
       list.addFirst( message );
       list.notify();
     }
@@ -80,8 +73,7 @@ public class MessageQueue
   /**
    * Remove all the data in the queue.
    */
-  public void clear()
-  {
+  public void clear() {
     list.clear();
   }
 
@@ -97,12 +89,9 @@ public class MessageQueue
    *
    * @throws InterruptedException
    */
-  public Message get() throws InterruptedException
-  {
-    synchronized( list )
-    {
-      while( list.size() == 0 )
-      {
+  public Message get() throws InterruptedException {
+    synchronized( list ) {
+      while ( list.size() == 0 ) {
         list.wait();
       }
 
@@ -124,17 +113,13 @@ public class MessageQueue
    *
    * @throws InterruptedException
    */
-  public Message get( final long millis ) throws InterruptedException
-  {
-    synchronized( list )
-    {
-      if( list.size() == 0 )
-      {
+  public Message get( final long millis ) throws InterruptedException {
+    synchronized( list ) {
+      if ( list.size() == 0 ) {
         list.wait( millis );
       }
 
-      if( list.size() == 0 )
-      {
+      if ( list.size() == 0 ) {
         return null;
       }
 
@@ -150,8 +135,7 @@ public class MessageQueue
    *
    * @return the number of message entries in the queue
    */
-  public int size()
-  {
+  public int size() {
     return list.size();
   }
 

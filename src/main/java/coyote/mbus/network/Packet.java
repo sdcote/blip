@@ -64,8 +64,7 @@ import coyote.mbus.message.MessageAddress;
  * <p>The length is the size of the payload that follows as an unsigned integer 
  * value in 32 bits.</p>
  */
-public class Packet
-{
+public class Packet {
   /** The number of octets in a Packet header */
   public static final int HEADER_SIZE = 13;
 
@@ -161,8 +160,7 @@ public class Packet
   /**
    *
    */
-  public Packet()
-  {
+  public Packet() {
     super();
   }
 
@@ -174,8 +172,7 @@ public class Packet
    * 
    * @param seq the sequence identifier for this packet.
    */
-  Packet( final long seq )
-  {
+  Packet( final long seq ) {
     super();
     this.sequence = seq;
   }
@@ -188,13 +185,10 @@ public class Packet
    *
    * @param data
    */
-  public Packet( final byte[] data ) throws PacketException
-  {
-    try
-    {
+  public Packet( final byte[] data ) throws PacketException {
+    try {
       // There is a 13-byte header on all packets
-      if( data.length > ( Packet.HEADER_SIZE - 1 ) )
-      {
+      if ( data.length > ( Packet.HEADER_SIZE - 1 ) ) {
         // Read in the packet type
         type = data[0];
 
@@ -209,8 +203,7 @@ public class Packet
         octetCount = Packet.HEADER_SIZE;
 
         // If there is more data to be processed
-        if( length > 0 )
-        {
+        if ( length > 0 ) {
           // TODO Check for excessive length and ignore any packets that are too long - Potential DoS vulnerability.
 
           // create the payload array large enough for just the packet
@@ -220,14 +213,10 @@ public class Packet
           message = new Message( payload );
           octetCount += length;
         }
-      }
-      else
-      {
+      } else {
         throw new PacketException( "data too small to be a packet" );
       }
-    }
-    catch( final RuntimeException e )
-    {
+    } catch ( final RuntimeException e ) {
       // Packet format error, null, array index out-of-bounds, etc...
       throw new PacketException( e.getMessage() );
     }
@@ -243,8 +232,7 @@ public class Packet
    *
    * @throws IOException
    */
-  public Packet( final DataInputStream dis ) throws IOException, PacketException
-  {
+  public Packet( final DataInputStream dis ) throws IOException, PacketException {
     final byte[] headerField = new byte[4];
 
     // The first byte is the Packet type
@@ -269,15 +257,11 @@ public class Packet
 
     // / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / /
     // read the payload if there is a payload to read
-    if( length > 0 )
-    {
+    if ( length > 0 ) {
       // sanity check for array creation
-      if( length > Integer.MAX_VALUE )
-      {
+      if ( length > Integer.MAX_VALUE ) {
         throw new IOException( "read overflow: cannot handle length of " + length );
-      }
-      else
-      {
+      } else {
         // create the payload array
         // TODO DANGER! We could easily run out of memory here!
         final byte[] payload = new byte[(int)length];
@@ -289,11 +273,9 @@ public class Packet
         int soFar = 0;
 
         // While we have more to read
-        while( soFar < length )
-        {
+        while ( soFar < length ) {
           // Make sure we read only what we need to read
-          if( length - soFar < 512 )
-          {
+          if ( length - soFar < 512 ) {
             chunk = new byte[( (int)length - soFar )];
           }
 
@@ -301,18 +283,14 @@ public class Packet
           final int read = dis.read( chunk );
 
           // if EOF, throw an exception
-          if( read == -1 )
-          {
+          if ( read == -1 ) {
             throw new IOException( "read underflow: unexpected EOF" );
           }
 
           // copy the chunk into our payload array
-          try
-          {
+          try {
             System.arraycopy( chunk, 0, payload, soFar, read );
-          }
-          catch( final ArrayIndexOutOfBoundsException e )
-          {
+          } catch ( final ArrayIndexOutOfBoundsException e ) {
             // Inconceivable!
             throw new IOException( "Packet AIOOB: Payload length='" + length + "' - chunk=" + chunk.length + ", 0, payload=" + payload.length + ", soFar=" + soFar + ", read=" + read );
           }
@@ -324,12 +302,9 @@ public class Packet
         // At this point we have read in only the amount given in the length
         // field so the DataInputStream should be positioned at the next
         // Packet. Now read the payload field as a packet
-        try
-        {
+        try {
           message = new Message( payload );
-        }
-        catch( final Exception e )
-        {
+        } catch ( final Exception e ) {
           throw new IOException( "Packet Error: " + e.getMessage() );
         }
 
@@ -347,13 +322,11 @@ public class Packet
    *
    * @return the bytes that can be used for transport over the network.
    */
-  public byte[] getBytes()
-  {
+  public byte[] getBytes() {
     final ByteArrayOutputStream baos = new ByteArrayOutputStream();
     final DataOutputStream dos = new DataOutputStream( baos );
 
-    try
-    {
+    try {
       // write the packet type
       dos.write( ByteUtil.renderShortByte( type ) );
 
@@ -363,8 +336,7 @@ public class Packet
       // write the packet sequence
       dos.write( ByteUtil.renderUnsignedInt( sequence ) );
 
-      if( message != null )
-      {
+      if ( message != null ) {
         final byte[] payload = message.getBytes();
 
         // Write the payload length
@@ -372,19 +344,13 @@ public class Packet
 
         // write the payload
         dos.write( payload );
-      }
-      else
-      {
+      } else {
         // Write a payload length of zero
         dos.write( ByteUtil.renderUnsignedInt( 0L ) );
       }
-    }
-    catch( final IOException e )
-    {
+    } catch ( final IOException e ) {
       e.printStackTrace();
-    }
-    catch( final RuntimeException e )
-    {
+    } catch ( final RuntimeException e ) {
       e.printStackTrace();
     }
 
@@ -403,10 +369,8 @@ public class Packet
    * @return The address of the MessageChannel from which this packet's packet was
    *         sent.
    */
-  public MessageAddress getSourceAddress()
-  {
-    if( message != null )
-    {
+  public MessageAddress getSourceAddress() {
+    if ( message != null ) {
       return message.getSource();
     }
 
@@ -423,10 +387,8 @@ public class Packet
    * @return The address of the MessageChannel for which this packet's packet is
    *         intended.
    */
-  public MessageAddress getTargetAddress()
-  {
-    if( message != null )
-    {
+  public MessageAddress getTargetAddress() {
+    if ( message != null ) {
       return message.getTarget();
     }
 
@@ -441,10 +403,8 @@ public class Packet
    * 
    * @param addr The address to set in the enclosed packet.
    */
-  public void setTargetAddress( final MessageAddress addr )
-  {
-    if( message != null )
-    {
+  public void setTargetAddress( final MessageAddress addr ) {
+    if ( message != null ) {
       message.setTarget( addr );
     }
   }
@@ -456,8 +416,7 @@ public class Packet
    * Return the type code of this packet.
    * @return  A short value in the range of 0-255.
    */
-  public short getType()
-  {
+  public short getType() {
     return type;
   }
 
@@ -469,8 +428,7 @@ public class Packet
    *
    * @return A human-readable type name.
    */
-  public String getTypeName()
-  {
+  public String getTypeName() {
     return Packet.getTypeName( type );
   }
 
@@ -481,8 +439,7 @@ public class Packet
    * Set the type of Message this is.
    * @param s  short in the range of 0-255.
    */
-  public void setType( final short s )
-  {
+  public void setType( final short s ) {
     type = s;
   }
 
@@ -492,14 +449,10 @@ public class Packet
   /**
    * @return a human readable string representation of the packet
    */
-  public String toString()
-  {
-    if( remoteAddress != null )
-    {
+  public String toString() {
+    if ( remoteAddress != null ) {
       return new String( getTypeName() + " seq:" + sequence + " NetworkService:" + endPoint + " src=" + remoteAddress.getHostAddress() + ":" + remotePort + " (" + octetCount + " bytes)" );
-    }
-    else
-    {
+    } else {
       return new String( getTypeName() + " #" + sequence + " NetworkService " + endPoint + " (local)" );
     }
 
@@ -515,10 +468,8 @@ public class Packet
    *
    * @return TODO Complete Documentation
    */
-  public static String getTypeName( final short code )
-  {
-    if( code < Packet.typeNames.length )
-    {
+  public static String getTypeName( final short code ) {
+    if ( code < Packet.typeNames.length ) {
       return Packet.typeNames[code];
     }
 
@@ -535,10 +486,8 @@ public class Packet
    *
    * @return TODO Complete Documentation
    */
-  public static int getPacketType( final byte[] header )
-  {
-    if( header.length > ( Packet.HEADER_SIZE - 1 ) )
-    {
+  public static int getPacketType( final byte[] header ) {
+    if ( header.length > ( Packet.HEADER_SIZE - 1 ) ) {
       return header[0];
     }
 
@@ -555,10 +504,8 @@ public class Packet
    *
    * @return TODO Complete Documentation
    */
-  public static long getPacketEndpoint( final byte[] header )
-  {
-    if( header.length > ( Packet.HEADER_SIZE - 1 ) )
-    {
+  public static long getPacketEndpoint( final byte[] header ) {
+    if ( header.length > ( Packet.HEADER_SIZE - 1 ) ) {
       return ByteUtil.retrieveUnsignedInt( header, 1 );
     }
 
@@ -575,10 +522,8 @@ public class Packet
    *
    * @return TODO Complete Documentation
    */
-  public static long getPacketSequence( final byte[] header )
-  {
-    if( header.length > ( Packet.HEADER_SIZE - 1 ) )
-    {
+  public static long getPacketSequence( final byte[] header ) {
+    if ( header.length > ( Packet.HEADER_SIZE - 1 ) ) {
       return ByteUtil.retrieveUnsignedInt( header, 5 );
     }
 
@@ -595,10 +540,8 @@ public class Packet
    *
    * @return TODO Complete Documentation
    */
-  public static int getPacketLength( final byte[] header )
-  {
-    if( header.length > ( Packet.HEADER_SIZE - 1 ) )
-    {
+  public static int getPacketLength( final byte[] header ) {
+    if ( header.length > ( Packet.HEADER_SIZE - 1 ) ) {
       return (int)ByteUtil.retrieveUnsignedInt( header, 9 );
     }
 
@@ -612,8 +555,7 @@ public class Packet
    * Returns the number of bytes determined to be required to represent this packet. <p>This actually represents only the cached value as determined by  previous calls to the constructors with arguments or the getBytes method.  If none of these methods have been called on this instance, this method  will return zero and NOT attempt to calculate the size of the packet.</p> <p>The return value represents the size of the encoded packet embedded in  this packet (if any) and the length of the header. Subtract HEADER_SIZE  from the returned value to determine the size of the encoded packet.</p>
    * @return  The number of octets required to represent this packet.
    */
-  public int getOctetCount()
-  {
+  public int getOctetCount() {
     return octetCount;
   }
 
@@ -623,8 +565,7 @@ public class Packet
   /**
    * @return  Returns the IP address from which this packet was sent.
    */
-  public InetAddress getRemoteAddress()
-  {
+  public InetAddress getRemoteAddress() {
     return remoteAddress;
   }
 
@@ -634,8 +575,7 @@ public class Packet
   /**
    * @return  Returns the IP port from which this packet was sent.
    */
-  public int getRemotePort()
-  {
+  public int getRemotePort() {
     return remotePort;
   }
 }

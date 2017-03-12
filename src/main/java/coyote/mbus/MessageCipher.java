@@ -124,8 +124,7 @@ import coyote.commons.ByteUtil;
  * Encryption Algorithm.</a></li>
  * </ol>
  */
-class MessageCipher
-{
+class MessageCipher {
 
   /**
    * Cipher initialization data.
@@ -170,9 +169,7 @@ class MessageCipher
   /**
    * Constructs a MessageCipher cipher object.</p>
    */
-  public MessageCipher()
-  {
-  }
+  public MessageCipher() {}
 
 
 
@@ -185,8 +182,7 @@ class MessageCipher
    *    <li>The Key object is null;
    *    <li>The encoded byte array form of the key is a zero length one.</ul>
    */
-  public void init( final byte[] key ) throws IllegalArgumentException
-  {
+  public void init( final byte[] key ) throws IllegalArgumentException {
     makeKey( key );
   }
 
@@ -196,13 +192,11 @@ class MessageCipher
   /**
    *
    */
-  public byte[] decrypt( final byte[] data )
-  {
+  public byte[] decrypt( final byte[] data ) {
     int inOff = 0;
     final int blockCount = data.length / MessageCipher.BLOCK_SIZE;
     final byte[] retval = new byte[blockCount * MessageCipher.BLOCK_SIZE];
-    for( int i = 0; i < blockCount; i++ )
-    {
+    for ( int i = 0; i < blockCount; i++ ) {
       blowfishDecrypt( data, inOff, retval, i * MessageCipher.BLOCK_SIZE );
       inOff += MessageCipher.BLOCK_SIZE;
     }
@@ -216,13 +210,11 @@ class MessageCipher
   /**
    *
    */
-  public byte[] encrypt( final byte[] bytes )
-  {
+  public byte[] encrypt( final byte[] bytes ) {
     int inOff = 0;
     final int blockCount = bytes.length / MessageCipher.BLOCK_SIZE;
     final byte[] outs = new byte[blockCount * MessageCipher.BLOCK_SIZE];
-    for( int i = 0; i < blockCount; i++ )
-    {
+    for ( int i = 0; i < blockCount; i++ ) {
       blowfishEncrypt( bytes, inOff, outs, i * MessageCipher.BLOCK_SIZE );
       inOff += MessageCipher.BLOCK_SIZE;
     }
@@ -250,13 +242,11 @@ class MessageCipher
    * @param out will contain the cipher-text block.
    * @param outOff index in out where cipher-text starts.
    */
-  private void blowfishEncrypt( final byte[] in, final int off, final byte[] out, final int outOff )
-  {
+  private void blowfishEncrypt( final byte[] in, final int off, final byte[] out, final int outOff ) {
     int L = ( ( in[off] & 0xFF ) << 24 ) | ( ( in[off + 1] & 0xFF ) << 16 ) | ( ( in[off + 2] & 0xFF ) << 8 ) | ( in[off + 3] & 0xFF ), R = ( ( in[off + 4] & 0xFF ) << 24 ) | ( ( in[off + 5] & 0xFF ) << 16 ) | ( ( in[off + 6] & 0xFF ) << 8 ) | ( in[off + 7] & 0xFF ), a, b, c, d;
 
     L ^= P[0];
-    for( int i = 0; i < MessageCipher.ROUNDS; )
-    {
+    for ( int i = 0; i < MessageCipher.ROUNDS; ) {
       a = ( L >>> 24 ) & 0xFF;
       b = 0x100 | ( ( L >>> 16 ) & 0xFF ); // 256 +
       c = 0x200 | ( ( L >>> 8 ) & 0xFF ); // 512 +
@@ -303,15 +293,13 @@ class MessageCipher
    * @param out will contain the plain-text block.
    * @param outOff index in out where plain-text starts.
    */
-  private void blowfishDecrypt( final byte[] in, final int off, final byte[] out, final int outOff )
-  {
+  private void blowfishDecrypt( final byte[] in, final int off, final byte[] out, final int outOff ) {
     int L = ( ( in[off] & 0xFF ) << 24 ) | ( ( in[off + 1] & 0xFF ) << 16 ) | ( ( in[off + 2] & 0xFF ) << 8 ) | ( in[off + 3] & 0xFF ), R = ( ( in[off + 4] & 0xFF ) << 24 ) | ( ( in[off + 5] & 0xFF ) << 16 ) | ( ( in[off + 6] & 0xFF ) << 8 ) | ( in[off + 7] & 0xFF );
 
     int a, b, c, d;
 
     L ^= P[MessageCipher.ROUNDS + 1];
-    for( int i = MessageCipher.ROUNDS; i > 0; )
-    {
+    for ( int i = MessageCipher.ROUNDS; i > 0; ) {
       a = ( L >>> 24 ) & 0xFF;
       b = 0x100 | ( ( L >>> 16 ) & 0xFF ); // 256 +
       c = 0x200 | ( ( L >>> 8 ) & 0xFF ); // 512 +
@@ -350,13 +338,11 @@ class MessageCipher
    * @param out the int array where the result will be saved.
    * @param outOff where the data starts in the byte array.
    */
-  private final void makeSessionKey( int L, int R, final int[] out, final int outOff )
-  {
+  private final void makeSessionKey( int L, int R, final int[] out, final int outOff ) {
     int a, b, c, d;
 
     L ^= P[0];
-    for( int i = 0; i < MessageCipher.ROUNDS; )
-    {
+    for ( int i = 0; i < MessageCipher.ROUNDS; ) {
       a = ( L >>> 24 ) & 0xFF;
       b = 0x100 | ( ( L >>> 16 ) & 0xFF ); // 256 +
       c = 0x200 | ( ( L >>> 8 ) & 0xFF ); // 512 +
@@ -396,22 +382,18 @@ class MessageCipher
    *    <li>The Key object is null;
    *    <li>The encoded byte array form of the key is a zero length one.</ul>
    */
-  private synchronized void makeKey( final byte[] key ) throws IllegalArgumentException
-  {
+  private synchronized void makeKey( final byte[] key ) throws IllegalArgumentException {
     final byte[] kk = key;
-    if( kk == null )
-    {
+    if ( kk == null ) {
       throw new IllegalArgumentException( "Null Blowfish key" );
     }
 
     int len = kk.length;
-    if( len == 0 )
-    {
+    if ( len == 0 ) {
       throw new IllegalArgumentException( "Invalid Blowfish user key length" );
     }
 
-    if( len > MessageCipher.MAX_USER_KEY_LENGTH )
-    {
+    if ( len > MessageCipher.MAX_USER_KEY_LENGTH ) {
       len = MessageCipher.MAX_USER_KEY_LENGTH;
     }
 
@@ -424,11 +406,9 @@ class MessageCipher
     System.arraycopy( MessageCipher.S3, 0, sKey, 768, 256 );
 
     int ri;
-    for( int i = 0, j = 0; i < MessageCipher.ROUNDS + 2; i++ )
-    {
+    for ( int i = 0, j = 0; i < MessageCipher.ROUNDS + 2; i++ ) {
       ri = 0;
-      for( int k = 0; k < 4; k++ )
-      {
+      for ( int k = 0; k < 4; k++ ) {
         ri = ( ri << 8 ) | ( kk[j++] & 0xFF );
         j %= len;
       }
@@ -437,15 +417,13 @@ class MessageCipher
 
     // use the former to effectively generate the session key
     makeSessionKey( 0, 0, P, 0 );
-    for( int i = 2; i < MessageCipher.ROUNDS + 2; i += 2 )
-    {
+    for ( int i = 2; i < MessageCipher.ROUNDS + 2; i += 2 ) {
       makeSessionKey( P[i - 2], P[i - 1], P, i );
     }
 
     // and this session s-boxes
     makeSessionKey( P[MessageCipher.ROUNDS], P[MessageCipher.ROUNDS + 1], sKey, 0 );
-    for( int i = 2; i < 4 * 256; i += 2 )
-    {
+    for ( int i = 2; i < 4 * 256; i += 2 ) {
       makeSessionKey( sKey[i - 2], sKey[i - 1], sKey, i );
     }
   }
@@ -453,11 +431,7 @@ class MessageCipher
 
 
 
-  /**
-   * @see net.bralyn.security.Cipher#getBlockSize()
-   */
-  public int getBlockSize()
-  {
+  public int getBlockSize() {
     return MessageCipher.BLOCK_SIZE;
   }
 
@@ -469,8 +443,7 @@ class MessageCipher
    * 
    * @param args
    */
-  public static void main( final String[] args )
-  {
+  public static void main( final String[] args ) {
     final MessageCipher cipher = new MessageCipher();
     cipher.init( "3657".getBytes() );
 
@@ -510,19 +483,16 @@ class MessageCipher
     // pad the data as necessary using a PKCS5 (or RFC1423) padding scheme
     int padding = cipher.getBlockSize() - ( bytes.length % cipher.getBlockSize() );
 
-    if( padding == 0 )
-    {
+    if ( padding == 0 ) {
       padding = cipher.getBlockSize();
     }
 
     System.out.println( "encrypt padding: " + padding );
 
-    if( padding > 0 )
-    {
+    if ( padding > 0 ) {
       final byte[] tmp = new byte[bytes.length + padding];
       System.arraycopy( bytes, 0, tmp, 0, bytes.length );
-      for( int x = bytes.length; x < tmp.length; tmp[x++] = (byte)padding )
-      {
+      for ( int x = bytes.length; x < tmp.length; tmp[x++] = (byte)padding ) {
         ;
       }
       bytes = tmp;
@@ -546,8 +516,7 @@ class MessageCipher
      */
     padding = data2[data2.length - 1];
 
-    if( ( padding > 0 ) && ( padding < 9 ) )
-    {
+    if ( ( padding > 0 ) && ( padding < 9 ) ) {
       final byte[] tmp = new byte[data2.length - padding];
       System.arraycopy( data2, 0, tmp, 0, tmp.length );
       data2 = tmp;

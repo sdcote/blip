@@ -47,8 +47,7 @@ import coyote.mbus.message.MessageAddress;
  * thread and take events off the socket channel as fast as possible. When an 
  * event is received, it is placed in the MessageChannel.</p>
  */
-public class MessageSession implements MessageSink, Runnable, MessageMediator
-{
+public class MessageSession implements MessageSink, Runnable, MessageMediator {
   /** The socket through which we communicate. */
   Socket socket = null;
 
@@ -172,10 +171,9 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
   /**
    * Create an MessageSession with the given Message Sink as the inbound sink.
    *
-   * @param inSink The Message Sink that will handle all our inbound events.
+   * @param sink The Message Sink that will handle all our inbound events.
    */
-  public MessageSession( final MessageSink sink )
-  {
+  public MessageSession( final MessageSink sink ) {
     // setup the component that coordinates the exchange of events giving it
     // this object as it reference to an event transport. This means the
     // RemoteService object will pass us all its events through our process()
@@ -185,12 +183,9 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
     // thread of execution.
     remoteService = new RemoteService( this );
 
-    if( sink == null )
-    {
+    if ( sink == null ) {
       messageChannel = new MessageChannel( this );
-    }
-    else
-    {
+    } else {
       // If the listener is an Message Manager...
       //if( sink instanceof MessageManager )
       //{
@@ -219,12 +214,9 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
   /**
    * Run the session in a background user thread.
    *
-   * @param t
-   *
    * @return TODO finish documentation.
    */
-  public Thread daemonize()
-  {
+  public Thread daemonize() {
     current_thread = new Thread( this );
 
     // only user threads keep the JVM running
@@ -244,8 +236,7 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
 
 
 
-  public void onMessage( final Message msg )
-  {
+  public void onMessage( final Message msg ) {
 
   }
 
@@ -261,32 +252,26 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
    * go. That is why we just ignore the event, because without a listener, we
    * have no idea how to process the event.</p>
    *
-   * @param event The event to process(ignore).
+   * @param message The message event to process(ignore).
    */
-  public void process( final Message message )
-  {
+  public void process( final Message message ) {
     // MicroBus.log( "process(Message) " + socketChannel.getLocalURI() + "->" + socketChannel.getRemoteURI() + "" );
 
     // since we have only one channel, we can route this ourselves
-    if( message != null )
-    {
+    if ( message != null ) {
       // MicroBus.log("process(Message): event: " + event.toXml() );
 
       // Set the reference to the event channel from where this event came
       //message.setMessageChannel( messageChannel );
 
       // check to see if this is a private message
-      if( MessageSession.EVENT_SESSION_GROUP.equals( message.getGroup() ) )
-      {
+      if ( MessageSession.EVENT_SESSION_GROUP.equals( message.getGroup() ) ) {
         // MicroBus.log("process(Message): Private message" );
         processPrivatePacket( message );
-      }
-      else
-      {
+      } else {
         // MicroBus.log("process(Message): Public message" );
 
-        if( messageChannel != null )
-        {
+        if ( messageChannel != null ) {
           // MicroBus.log("process(Message): to event channel " + messageChannel );
           messageChannel.receive( message );
         } // channel !null
@@ -305,52 +290,40 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
    *
    * @param uri The remote service URI
    *
-   * @throws EventSessionException
+   * @throws IllegalArgumentException
    */
-  public void connect( final URI uri ) throws IllegalArgumentException
-  {
+  public void connect( final URI uri ) throws IllegalArgumentException {
 
-    if( uri == null )
-    {
+    if ( uri == null ) {
       throw new IllegalArgumentException( "URI is null" );
     }
 
-    if( uri.getHost() == null )
-    {
+    if ( uri.getHost() == null ) {
       throw new IllegalArgumentException( "URI specifies null host" );
     }
 
-    if( uri.getHost().trim().length() < 1 )
-    {
+    if ( uri.getHost().trim().length() < 1 ) {
       throw new IllegalArgumentException( "URI specifies illegal host of '" + uri.getHost() + "'" );
     }
 
-    if( uri.getPort() < 1 )
-    {
+    if ( uri.getPort() < 1 ) {
       throw new IllegalArgumentException( "URI specifies illegal port of '" + uri.getPort() + "'" );
     }
 
     serviceUri = uri;
 
-    try
-    {
+    try {
       // Kick off connection establishment
       socket = new Socket( serviceUri.getHost(), serviceUri.getPort() );
       connectedTime = System.currentTimeMillis();
       System.out.println( "---------------------CONNECTED----------------------" );
       // Start the session running in the background
       daemonize();
-    }
-    catch( final Throwable t )
-    {
-      try
-      {
+    } catch ( final Throwable t ) {
+      try {
         // try to clean things up on our end
         socket.close();
-      }
-      catch( final Throwable ignore )
-      {
-      }
+      } catch ( final Throwable ignore ) {}
 
       throw new IllegalArgumentException( t.getMessage() );
     }
@@ -365,8 +338,7 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
    * <p>MessageSession listeners are not notified at this point. Disconnection
    * notification occurs in a single location: the terminate() method.</p>
    */
-  public void disconnect()
-  {
+  public void disconnect() {
     // don't try to restart/reconnect
     restart = false;
 
@@ -395,12 +367,10 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
    *
    * @param group Name of the group to which we wish to join
    * 
-   * @throws EventSessionException if already subscribed to the channel
+   * @throws IllegalArgumentException if already subscribed to the channel
    */
-  public void join( final String group ) throws IllegalArgumentException
-  {
-    if( groups.containsKey( group ) )
-    {
+  public void join( final String group ) throws IllegalArgumentException {
+    if ( groups.containsKey( group ) ) {
       throw new IllegalArgumentException( "Already a member of group" );
     }
 
@@ -429,12 +399,10 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
    * @param group Name of the group to which we wish to join
    * @param capsule Capsule containing a membership or subscription attributes
    * 
-   * @throws EventSessionException if already subscribed to the group
+   * @throws IllegalArgumentException if already subscribed to the group
    */
-  public void join( final String group, final Message capsule ) throws IllegalArgumentException
-  {
-    if( groups.containsKey( group ) )
-    {
+  public void join( final String group, final Message capsule ) throws IllegalArgumentException {
+    if ( groups.containsKey( group ) ) {
       throw new IllegalArgumentException( "Already a member of group" );
     }
 
@@ -458,10 +426,8 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
    *
    * @param group Name of the group from which we wish to unsubscribe
    */
-  public void leave( final String group )
-  {
-    if( groups.containsKey( group ) )
-    {
+  public void leave( final String group ) {
+    if ( groups.containsKey( group ) ) {
       final Message event = new Message();
       event.setGroup( MessageSession.EVENT_SESSION_GROUP );
       event.add( MessageSession.ACTION_FIELD, MessageSession.LEAVE_ACTION );
@@ -493,8 +459,7 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
    *
    * @param group Name of the group from which we wish to unsubscribe
    */
-  private void stopReceiving( final String group )
-  {
+  private void stopReceiving( final String group ) {
     final Message event = new Message();
     event.setGroup( MessageSession.EVENT_SESSION_GROUP );
     event.add( MessageSession.ACTION_FIELD, MessageSession.STOP_ACTION );
@@ -508,8 +473,7 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
   /**
    * Method initialize
    */
-  private void initialize()
-  {
+  private void initialize() {
     //MicroBus.log( "MessageSession dispatcher initializing" );
 
     //MicroBus.log( "Processing connection to " + socket.getInetAddress() + ":" + socket.getPort() );
@@ -523,33 +487,30 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
       while( socket.isClosed() )
       {
         MicroBus.log( "Attempting to reconnect to " + serviceUri );
-
+    
         try
         {
           socketChannel = SocketChannel.open();
           socketChannel.configureBlocking( false );
           socketChannel.connect( new InetSocketAddress( serviceUri.getHost(), serviceUri.getPort() ) );
-
+    
           // Create a new RemoteService object to track session state
           //remoteService = new RemoteService( this );
         }
         catch( final Exception e )
         {
           MicroBus.log( "Could not reconnect to " + serviceUri + " - " + e.getMessage() );
-
+    
           // pause for a short time
           park( 6000 );
         }
       } // while socket !open
     */
     // We must be open at this point, get our streams
-    try
-    {
+    try {
       dis = new DataInputStream( socket.getInputStream() );
       dos = new DataOutputStream( socket.getOutputStream() );
-    }
-    catch( final Exception ex )
-    {
+    } catch ( final Exception ex ) {
       //MicroBus.log( "Could not open streams to '" + socket + "' - " + ex.getMessage() );
       shutdown();
 
@@ -611,8 +572,7 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
    * @return True if the session is running on an open socket, false if the
    *         session is not running or the socket is not open.
    */
-  public boolean isConnected()
-  {
+  public boolean isConnected() {
     return true;// ( isActive() && socketChannel.isOpen() );
   }
 
@@ -623,10 +583,8 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
    * Thread-safe call to get the operational state of the session. <p>When the session is operational, it is currently connected and reading events from and placing events on its transport. This is different from  the Active state, which implies ontly that the initialize method has been called at least once.</p>
    * @return  True if the session is initialized and connected, false if the  session is not connected, or in the state of retrying a lost  connection.
    */
-  public boolean isOperational()
-  {
-    synchronized( opLock )
-    {
+  public boolean isOperational() {
+    synchronized( opLock ) {
       return operational;
     }
   }
@@ -638,10 +596,8 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
    * Thread-safe setting of the operational flag.
    * @param flag  True to set the event session in the operational state, false  otherwise.
    */
-  private void setOperational( final boolean flag )
-  {
-    synchronized( opLock )
-    {
+  private void setOperational( final boolean flag ) {
+    synchronized( opLock ) {
       operational = flag;
     }
   }
@@ -660,31 +616,22 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
    * @param timeout number of milliseconds to wait for the session to become
    *        operational.
    */
-  public void waitForOperational( final long timeout )
-  {
-    if( !isOperational() )
-    {
+  public void waitForOperational( final long timeout ) {
+    if ( !isOperational() ) {
       // determine the timeout sentinel value
       final long tout = System.currentTimeMillis() + timeout;
 
       // While we have not reached the sentinel time
-      while( tout > System.currentTimeMillis() )
-      {
+      while ( tout > System.currentTimeMillis() ) {
         // wait on the operational lock object
-        synchronized( opLock )
-        {
-          try
-          {
+        synchronized( opLock ) {
+          try {
             opLock.wait( 10 );
-          }
-          catch( final Throwable t )
-          {
-          }
+          } catch ( final Throwable t ) {}
         }
 
         // if we are now active...
-        if( isOperational() )
-        {
+        if ( isOperational() ) {
           // ... break out of the time-out while loop
           break;
         }
@@ -698,10 +645,8 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
   /**
    * @return  whether or not the current thread is set to shutdown.
    */
-  public boolean isShutdown()
-  {
-    synchronized( opLock )
-    {
+  public boolean isShutdown() {
+    synchronized( opLock ) {
       return shutdown;
     }
   }
@@ -713,10 +658,8 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
    * Return whether or not the thread has entered and is currently within the main run loop.
    * @return  True if the ThreadJob has been initialized and is cycling in the run  loop, False otherwise.
    */
-  public boolean isActive()
-  {
-    synchronized( opLock )
-    {
+  public boolean isActive() {
+    synchronized( opLock ) {
       return active;
     }
   }
@@ -738,14 +681,11 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
    *
    * @param flag The boolean value to set to the active flag.
    */
-  protected void setActiveFlag( final boolean flag )
-  {
-    synchronized( opLock )
-    {
+  protected void setActiveFlag( final boolean flag ) {
+    synchronized( opLock ) {
       active = flag;
 
-      if( active )
-      {
+      if ( active ) {
         opLock.notifyAll();
       }
     }
@@ -757,10 +697,8 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
   /**
    * Suspend this object's thread of execution.
    */
-  public void suspend()
-  {
-    synchronized( opLock )
-    {
+  public void suspend() {
+    synchronized( opLock ) {
       suspended = true;
     }
   }
@@ -771,10 +709,8 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
   /**
    * @return  whether or not the current thread is in a suspended state.
    */
-  public boolean isSuspended()
-  {
-    synchronized( opLock )
-    {
+  public boolean isSuspended() {
+    synchronized( opLock ) {
       return suspended;
     }
   }
@@ -785,10 +721,8 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
   /**
    * This resumes this object's thread of execution.
    */
-  public void resume()
-  {
-    synchronized( opLock )
-    {
+  public void resume() {
+    synchronized( opLock ) {
       suspended = false;
 
       opLock.notifyAll();
@@ -808,34 +742,21 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
    *
    * @param timeout The number of milliseconds to wait.
    */
-  protected void park( final long timeout )
-  {
-    synchronized( opLock )
-    {
-      if( isShutdown() )
-      {
+  protected void park( final long timeout ) {
+    synchronized( opLock ) {
+      if ( isShutdown() ) {
         // Cannot suspend if shutdown is pending
-        if( isSuspended() )
-        {
+        if ( isSuspended() ) {
           resume();
         }
-      }
-      else
-      {
-        if( current_thread != null )
-        {
-          try
-          {
+      } else {
+        if ( current_thread != null ) {
+          try {
             opLock.wait( timeout );
-          }
-          catch( final InterruptedException x )
-          {
+          } catch ( final InterruptedException x ) {
             current_thread.interrupt(); // re-throw
           }
-        }
-        else
-        {
-        }
+        } else {}
       }
     }
   }
@@ -843,12 +764,10 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
 
 
 
-  public void run()
-  {
+  public void run() {
     current_thread = Thread.currentThread();
 
-    do
-    {
+    do {
       // Setup everything we need to run
       initialize();
 
@@ -856,8 +775,7 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
       // use waitForActive to wait for us to initialize
       setActiveFlag( true );
 
-      while( !isShutdown() )
-      {
+      while ( !isShutdown() ) {
         // Do work
         doWork();
 
@@ -867,8 +785,7 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
         park( idle_wait_time );
 
         // Check to see if we should suspend execution
-        if( isSuspended() )
-        {
+        if ( isSuspended() ) {
           // park for an indefinite period of time (resume will interrupt park)
           park( 0 );
         }
@@ -878,7 +795,7 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
       // Clean up after ourselves, although we may restart
       terminate();
     }
-    while( restart );
+    while ( restart );
 
     // We are no longer running active
     setActiveFlag( false );
@@ -896,91 +813,65 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
    * written to the transport via the RemoteService node that caches and 
    * sequences each frame.</p>
    */
-  public void doWork()
-  {
+  public void doWork() {
     // check what our peer has for us
-    if( dis != null )
-    {
-      synchronized( dis )
-      {
-        try
-        {
+    if ( dis != null ) {
+      synchronized( dis ) {
+        try {
           // If the connection is open
-          if( !socket.isClosed() )
-          {
+          if ( !socket.isClosed() ) {
             Packet frame = null;
 
             // While there is data in the socket buffer
-            if( dis.available() > 0 )
-            {
+            if ( dis.available() > 0 ) {
               // try to create a request message from the input stream
-              try
-              {
+              try {
                 // create the request
                 frame = new Packet( dis );
 
                 // process the received frame
                 System.out.println( frame.toString() );
-              }
-              catch( final Exception hme )
-              {
+              } catch ( final Exception hme ) {
                 //MicroBus.err( hme.toString() );
               }
-            }
-            else
-            {
-              if( socket.isClosed() )
-              {
+            } else {
+              if ( socket.isClosed() ) {
                 //MicroBus.log( "Peer from '" + socket + "' closed the connection" );
 
                 // just exit the loop and let's restart
               }
             }
-          }
-          else
-          {
+          } else {
             //MicroBus.log( "Lost connection to '" + serverUri + "', reconnecting" );
           }
-        }
-        catch( final IOException ioe )
-        {
+        } catch ( final IOException ioe ) {
           // TODO get rid of this
           ioe.printStackTrace();
-        }
-        catch( final Exception e )
-        {
+        } catch ( final Exception e ) {
           // TODO get rid of this
           e.printStackTrace();
         }
       }
     }
 
-    try
-    {
+    try {
       // Now check to see of we have anything to send out to the peer
       // If we have any messages in our outbound queue//
-      if( messageChannel.outboundDepth() > 0 )
-      {
+      if ( messageChannel.outboundDepth() > 0 ) {
         // Make sure we don't go idle for another Idle Timeout interval
         //super.rev();
 
         Message event = null;
 
-        synchronized( messageChannel )
-        {
-          try
-          {
+        synchronized( messageChannel ) {
+          try {
             // try to get the next message, but only wait for 5 milliseconds
             event = messageChannel.getNextOutbound( 5 );
-          }
-          catch( final Exception e )
-          {
-          }
+          } catch ( final Exception e ) {}
         }
 
         // if we have a message...
-        if( event != null )
-        {
+        if ( event != null ) {
           // Have the RemoteService object package, cache and send the event
           // returning the identifier of the event
           //remoteService.send( event );
@@ -988,9 +879,7 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
 
       } // if messages in the outbound queue
 
-    }
-    catch( final RuntimeException e )
-    {
+    } catch ( final RuntimeException e ) {
       // TODO get rid of this
       e.printStackTrace();
     }
@@ -1007,26 +896,18 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
    *
    * @param dout The output stream to use to send the initialization sequence
    */
-  private void sendStart( final DataOutputStream dout )
-  {
-    try
-    {
+  private void sendStart( final DataOutputStream dout ) {
+    try {
       dout.write( 16 ); // Data Link Escape
       dout.write( 01 ); // Start Of Header
       dout.write( 23 ); // End of Transmit Block
       dout.flush(); // flush the data to the remote end
 
       // give the other end time to digest the sequence
-      try
-      {
+      try {
         Thread.sleep( 5 );
-      }
-      catch( final InterruptedException ignore )
-      {
-      }
-    }
-    catch( final IOException e )
-    {
+      } catch ( final InterruptedException ignore ) {}
+    } catch ( final IOException e ) {
       //MicroBus.err( "Could not send session start sequence: " + e.getMessage() );
       shutdown();
     }
@@ -1044,8 +925,7 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
    * and if set to true, will cause the initialize method to be called again 
    * and the main run loop will be re-entered.</p>
    */
-  public void shutdown()
-  {
+  public void shutdown() {
     //super.shutdown();
     //MicroBus.log( "MessageSession shutdown" );
   }
@@ -1056,56 +936,37 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
   /**
    * Method terminate
    */
-  public void terminate()
-  {
+  public void terminate() {
     //MicroBus.log( "terminate: terminating connection" );
     setOperational( false );
 
     // We are shutting down, remove ourselves from the PacketManager
     //if( eventManager != null )      eventManager.removeChannel( messageChannel );
 
-    if( dis != null )
-    {
-      try
-      {
+    if ( dis != null ) {
+      try {
         dis.close();
-      }
-      catch( final Exception ex )
-      {
-      }
-      finally
-      {
+      } catch ( final Exception ex ) {}
+      finally {
         dis = null;
       }
     }
 
-    if( dos != null )
-    {
-      try
-      {
+    if ( dos != null ) {
+      try {
         dos.close();
-      }
-      catch( final Exception ex )
-      {
-      }
-      finally
-      {
+      } catch ( final Exception ex ) {}
+      finally {
         dos = null;
       }
     }
 
     // close socket
-    if( socket != null )
-    {
-      try
-      {
+    if ( socket != null ) {
+      try {
         socket.close();
-      }
-      catch( final Exception ex )
-      {
-      }
-      finally
-      {
+      } catch ( final Exception ex ) {}
+      finally {
         //if( restart == false )
         {
           socket = null;
@@ -1119,8 +980,7 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
 
 
 
-  public void send( final Message packet )
-  {
+  public void send( final Message packet ) {
 
   }
 
@@ -1135,17 +995,13 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
    * expected that the given Packet will be properly populated according 
    * to the rules of the protocol this frame is transporting.</p>
    *
-   * @param frame The frame to send on the the network medium.
+   * @param packet The packet to send on the the network medium.
    */
-  public void send( final Packet packet )
-  {
-    if( packet != null )
-    {
+  public void send( final Packet packet ) {
+    if ( packet != null ) {
       // Make sure we have a source address
-      if( packet.getSourceAddress() == null )
-      {
-        if( packet.message != null )
-        {
+      if ( packet.getSourceAddress() == null ) {
+        if ( packet.message != null ) {
           // set the source address of the event to our local address | port |
           // endpoint | channel
           packet.message.setSource( new MessageAddress( socket.getLocalAddress(), socket.getLocalPort(), 0, -1 ) );
@@ -1153,13 +1009,10 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
       }
 
       // send the frame
-      try
-      {
+      try {
         dos.write( packet.getBytes() );
         dos.flush();
-      }
-      catch( final IOException e )
-      {
+      } catch ( final IOException e ) {
         //MicroBus.err( "Could not send frame: " + e.getMessage() );
       }
     }
@@ -1172,8 +1025,7 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
    * Get the reference to the event channel this session uses to handle inbound and outbound events.
    * @return  The reference to this session's MessageChannel
    */
-  public MessageChannel getMessageChannel()
-  {
+  public MessageChannel getMessageChannel() {
     return messageChannel;
   }
 
@@ -1183,8 +1035,7 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
   /**
    * @return  The client identifier for this session.
    */
-  public String getClientId()
-  {
+  public String getClientId() {
     return clientId;
   }
 
@@ -1196,8 +1047,7 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
    *
    * @return TODO Complete Documentation
    */
-  public long getConnectionTime()
-  {
+  public long getConnectionTime() {
     return 0;//socketChannel.getConnectionUpTime();
   }
 
@@ -1207,8 +1057,7 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
   /**
    * @return TODO Complete Documentation
    */
-  public long getConnectedTime()
-  {
+  public long getConnectedTime() {
     return 0;//socketChannel.getConnectedTime();
   }
 
@@ -1219,8 +1068,7 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
    * Set the client identifier for this
    * @param  string
    */
-  public void setClientId( final String string )
-  {
+  public void setClientId( final String string ) {
     clientId = string;
 
     messageChannel.setClientId( clientId );
@@ -1238,20 +1086,17 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
    *
    * @param event The event to process.
    */
-  private void processPrivatePacket( final Message event )
-  {
+  private void processPrivatePacket( final Message event ) {
     //MicroBus.log( "processPrivatePacket: event: " + event.toXml() );
 
     final String action = event.getField( MessageSession.ACTION_FIELD ).getObjectValue().toString();
     //MicroBus.log( "processPrivatePacket: checking: " + action );
 
-    if( MessageSession.JOIN_ACTION.equals( action ) )
-    {
+    if ( MessageSession.JOIN_ACTION.equals( action ) ) {
       final String group = event.getField( MessageSession.GROUP_FIELD ).getObjectValue().toString();
       // DataCapsule qual = new DataCapsule( (String)event.getObject( POLICY_FIELD ) );
 
-      if( group != null )
-      {
+      if ( group != null ) {
         // if ( qual != null && qual instanceof Message)
         //if( qual != null )
         //{
@@ -1262,39 +1107,28 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
         messageChannel.join( group );
         //MicroBus.log( "received a request to join '" + group + "'" );
       }
-    }
-    else if( MessageSession.LEAVE_ACTION.equals( action ) )
-    {
+    } else if ( MessageSession.LEAVE_ACTION.equals( action ) ) {
       final String group = event.getField( MessageSession.GROUP_FIELD ).getObjectValue().toString();
-      if( group != null )
-      {
+      if ( group != null ) {
         messageChannel.leave( group );
         //MicroBus.log( "received a request to leave the '" + group + "' group" );
       }
-    }
-    else if( MessageSession.STOP_ACTION.equals( action ) )
-    {
+    } else if ( MessageSession.STOP_ACTION.equals( action ) ) {
       final String group = event.getField( MessageSession.GROUP_FIELD ).getObjectValue().toString();
-      if( group != null )
-      {
+      if ( group != null ) {
         // messageChannel.stopReceiving( group );
         //MicroBus.log( "received a request to stop subscription from '" + group + "'" );
       }
-    }
-    else if( MessageSession.SETID_ACTION.equals( action ) )
-    {
+    } else if ( MessageSession.SETID_ACTION.equals( action ) ) {
       final String id = event.getField( MessageSession.CLIENTID_FIELD ).getObjectValue().toString();
-      if( id != null )
-      {
+      if ( id != null ) {
         clientId = id;
 
         messageChannel.setClientId( clientId );
 
         //MicroBus.log( "remote end set our client id to '" + id + "'" );
       }
-    }
-    else
-    {
+    } else {
       //MicroBus.log( "processPrivatePacket: Unknown action: '" + action + "'" );
     }
   }
@@ -1305,12 +1139,10 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
   /**
    * Make sure the remote end uses the same client identifier we are using.
    */
-  void syncClientId()
-  {
+  void syncClientId() {
     //MicroBus.log( "sending client identifier of '" + clientId + "'" );
 
-    if( ( socket != null ) && !socket.isClosed() )
-    {
+    if ( ( socket != null ) && !socket.isClosed() ) {
       final Message event = new Message();
       event.setGroup( MessageSession.EVENT_SESSION_GROUP );
       event.add( MessageSession.ACTION_FIELD, MessageSession.SETID_ACTION );
@@ -1324,11 +1156,8 @@ public class MessageSession implements MessageSink, Runnable, MessageMediator
 
   /**
    * The remote end of the connection.
-   * 
-   * @see net.bralyn.event.IEventSession#getRemoteUri()
    */
-  public URI getRemoteUri()
-  {
+  public URI getRemoteUri() {
     return null; // socketChannel.getRemoteURI();
   }
 }

@@ -14,7 +14,6 @@ package coyote.mbus.network;
 import coyote.mbus.message.Message;
 
 
-
 /**
  * Message Mediators send and route packets over some transport medium.
  * 
@@ -34,8 +33,7 @@ import coyote.mbus.message.Message;
  * Packet protocol handlers to talk to other Packet protocol handlers or
  * to allow the transport to route Packets to its clients.</p>
  */
-interface MessageMediator
-{
+interface MessageMediator {
 
   /**
    * Send the packet out to the network.

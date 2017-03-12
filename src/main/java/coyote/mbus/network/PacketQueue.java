@@ -18,8 +18,7 @@ import java.util.LinkedList;
  * PacketQueue models a packet queue that holds PacketPackets for handling by
  * another component, like a dispatcher.
  */
-public class PacketQueue
-{
+public class PacketQueue {
 
   /** Field list */
   LinkedList list = new LinkedList();
@@ -30,9 +29,7 @@ public class PacketQueue
   /**
    * Constructor PacketQueue
    */
-  public PacketQueue()
-  {
-  }
+  public PacketQueue() {}
 
 
 
@@ -42,10 +39,8 @@ public class PacketQueue
    *
    * @param packet The packet to add.
    */
-  public void add( final Packet packet )
-  {
-    synchronized( list )
-    {
+  public void add( final Packet packet ) {
+    synchronized( list ) {
       list.add( packet );
       list.notify();
     }
@@ -59,10 +54,8 @@ public class PacketQueue
    * 
    * @param packet The packet to add.
    */
-  void addFirst( final Packet packet )
-  {
-    synchronized( list )
-    {
+  void addFirst( final Packet packet ) {
+    synchronized( list ) {
       list.addFirst( packet );
       list.notify();
     }
@@ -84,26 +77,21 @@ public class PacketQueue
    *          
    * @return the last Packet sequence in the list, -1 if the list is empty.
    */
-  long expire( final long millis )
-  {
+  long expire( final long millis ) {
     final long limit = System.currentTimeMillis() - millis;
 
-    synchronized( list )
-    {
-      for( int i = 0; i < list.size(); i++ )
-      {
+    synchronized( list ) {
+      for ( int i = 0; i < list.size(); i++ ) {
         final Packet packet = (Packet)list.get( i );
 
-        if( packet.timestamp < limit )
-        {
+        if ( packet.timestamp < limit ) {
           list.remove( i );
           i--;
         }
       }
     }
 
-    if( list.size() > 0 )
-    {
+    if ( list.size() > 0 ) {
       return ( (Packet)( list.getLast() ) ).sequence;
     }
 
@@ -118,8 +106,7 @@ public class PacketQueue
    *
    * @return TODO Complete Documentation
    */
-  public int size()
-  {
+  public int size() {
     return list.size();
   }
 
@@ -135,12 +122,9 @@ public class PacketQueue
    *
    * @throws InterruptedException
    */
-  public Packet get() throws InterruptedException
-  {
-    synchronized( list )
-    {
-      while( list.size() == 0 )
-      {
+  public Packet get() throws InterruptedException {
+    synchronized( list ) {
+      while ( list.size() == 0 ) {
         list.wait();
       }
 
@@ -162,17 +146,13 @@ public class PacketQueue
    *
    * @throws InterruptedException
    */
-  public Packet get( final long millis ) throws InterruptedException
-  {
-    synchronized( list )
-    {
-      if( list.size() == 0 )
-      {
+  public Packet get( final long millis ) throws InterruptedException {
+    synchronized( list ) {
+      if ( list.size() == 0 ) {
         list.wait( millis );
       }
 
-      if( list.size() == 0 )
-      {
+      if ( list.size() == 0 ) {
         return null;
       }
 
@@ -188,12 +168,9 @@ public class PacketQueue
    *
    * @return The next packet in the queue, null of there are no packets queued.
    */
-  public Packet next()
-  {
-    synchronized( list )
-    {
-      if( list.size() == 0 )
-      {
+  public Packet next() {
+    synchronized( list ) {
+      if ( list.size() == 0 ) {
         return null;
       }
 
@@ -215,16 +192,12 @@ public class PacketQueue
    * @return The packet in the queue with the given sequence identifier or null
    *         if the identifier is not found
    */
-  Packet getPacket( final long sequence )
-  {
-    synchronized( list )
-    {
-      for( int i = 0; i < list.size(); i++ )
-      {
+  Packet getPacket( final long sequence ) {
+    synchronized( list ) {
+      for ( int i = 0; i < list.size(); i++ ) {
         final Packet packet = (Packet)list.get( i );
 
-        if( packet.sequence == sequence )
-        {
+        if ( packet.sequence == sequence ) {
           return packet;
         }
       }
@@ -240,11 +213,9 @@ public class PacketQueue
    * @return The sequence identifier of the last packet in the list or -1 if the 
    *         list is empty.
    */
-  long getLastSequence()
-  {
+  long getLastSequence() {
     final Object retval = list.getFirst();
-    if( retval != null )
-    {
+    if ( retval != null ) {
       return ( (Packet)retval ).sequence;
     }
     return -1;

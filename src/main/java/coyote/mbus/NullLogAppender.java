@@ -11,37 +11,35 @@
  */
 package coyote.mbus;
 
-
 /**
  * This is a null log appender - a log appender which does nothing.
  */
-public class NullLogAppender implements LogAppender
-{
+public class NullLogAppender implements LogAppender {
 
   /**
    * @see coyote.mbus.LogAppender#append(java.lang.String)
    */
   @Override
-  public void append( String message )
-  {
-  }
+  public void append( String message ) {}
+
+
+
 
   /**
    * @see coyote.mbus.LogAppender#isEnabled()
    */
   @Override
-  public boolean isEnabled()
-  {
+  public boolean isEnabled() {
     return false;
   }
+
+
+
 
   /**
    * @see coyote.mbus.LogAppender#setEnabled(boolean)
    */
   @Override
-  public void setEnabled( boolean enabled )
-  {
-  }
+  public void setEnabled( boolean enabled ) {}
 
- 
 }

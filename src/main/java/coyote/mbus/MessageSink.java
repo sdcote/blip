@@ -13,12 +13,12 @@ package coyote.mbus;
 
 import coyote.mbus.message.Message;
 
+
 /**
  * Object that implement this interface are enabled to be used as a call-back
  * for MessageChannels
  */
-public interface MessageSink
-{
+public interface MessageSink {
 
   /**
    * Allow messages to be sent to the object implementing this interface.

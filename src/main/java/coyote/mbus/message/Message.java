@@ -23,8 +23,7 @@ import coyote.mbus.network.MessageChannel;
 /**
  * 
  */
-public class Message extends DataFrame implements Cloneable
-{
+public class Message extends DataFrame implements Cloneable {
   /** The name of the message identifier field. */
   public static final String IDENTIFIER = "MID";
 
@@ -117,8 +116,7 @@ public class Message extends DataFrame implements Cloneable
    * @param name
    * @param value
    */
-  public Message( String name, boolean value )
-  {
+  public Message( String name, boolean value ) {
     super( name, value );
   }
 
@@ -129,8 +127,7 @@ public class Message extends DataFrame implements Cloneable
    * @param name
    * @param value
    */
-  public Message( String name, byte value )
-  {
+  public Message( String name, byte value ) {
     super( name, value );
   }
 
@@ -141,8 +138,7 @@ public class Message extends DataFrame implements Cloneable
    * @param name
    * @param value
    */
-  public Message( String name, double value )
-  {
+  public Message( String name, double value ) {
     super( name, value );
   }
 
@@ -153,8 +149,7 @@ public class Message extends DataFrame implements Cloneable
    * @param name
    * @param value
    */
-  public Message( String name, float value )
-  {
+  public Message( String name, float value ) {
     super( name, value );
   }
 
@@ -165,8 +160,7 @@ public class Message extends DataFrame implements Cloneable
    * @param name
    * @param value
    */
-  public Message( String name, int value )
-  {
+  public Message( String name, int value ) {
     super( name, value );
   }
 
@@ -177,8 +171,7 @@ public class Message extends DataFrame implements Cloneable
    * @param name
    * @param value
    */
-  public Message( String name, long value )
-  {
+  public Message( String name, long value ) {
     super( name, value );
   }
 
@@ -189,8 +182,7 @@ public class Message extends DataFrame implements Cloneable
    * @param name
    * @param value
    */
-  public Message( String name, Object value )
-  {
+  public Message( String name, Object value ) {
     super( name, value );
   }
 
@@ -201,8 +193,7 @@ public class Message extends DataFrame implements Cloneable
    * @param name
    * @param value
    */
-  public Message( String name, short value )
-  {
+  public Message( String name, short value ) {
     super( name, value );
   }
 
@@ -217,23 +208,17 @@ public class Message extends DataFrame implements Cloneable
    * @return An message with all header fields filled with their complementing 
    *         values from the given message or null if the argument was null.
    */
-  public static Message createResponse( final Message request )
-  {
-    if( request != null )
-    {
+  public static Message createResponse( final Message request ) {
+    if ( request != null ) {
       final Message retval = new Message();
 
-      if( request.getReplyGroup() != null )
-      {
+      if ( request.getReplyGroup() != null ) {
         retval.setGroup( request.getReplyGroup() );
-      }
-      else
-      {
+      } else {
         retval.setGroup( request.getGroup() );
       }
 
-      if( request.getId() != null )
-      {
+      if ( request.getId() != null ) {
         retval.setReplyId( request.getId() );
       }
 
@@ -251,14 +236,10 @@ public class Message extends DataFrame implements Cloneable
    * @return A priority string for the given value or "UNKNOWN" if value is out 
    *         of range.
    */
-  public static String getPriorityString( final short value )
-  {
-    if( ( value > -1 ) && ( value < Message.priorityNames.length ) )
-    {
+  public static String getPriorityString( final short value ) {
+    if ( ( value > -1 ) && ( value < Message.priorityNames.length ) ) {
       return Message.priorityNames[value];
-    }
-    else
-    {
+    } else {
       return "UNKNOWN";
     }
   }
@@ -269,9 +250,7 @@ public class Message extends DataFrame implements Cloneable
   /**
    * Construct an empty Message.
    */
-  public Message()
-  {
-  }
+  public Message() {}
 
 
 
@@ -281,8 +260,7 @@ public class Message extends DataFrame implements Cloneable
    *
    * @param data The byte array from which to construct the Message.
    */
-  public Message( final byte[] data )
-  {
+  public Message( final byte[] data ) {
     super( data );
   }
 
@@ -295,14 +273,12 @@ public class Message extends DataFrame implements Cloneable
    * <p>The sequence, source and digest are NOT cloned, as they are generated 
    * as a part of the transmission process.</p>
    */
-  public Object clone()
-  {
+  public Object clone() {
     final Message retval = new Message();
 
     // Clone all the fields
-    for( int i = 0; i < fields.size(); i++ )
-    {
-      retval.fields.add( i, (DataField) fields.get( i ).clone() );
+    for ( int i = 0; i < fields.size(); i++ ) {
+      retval.fields.add( i, (DataField)fields.get( i ).clone() );
     }
     retval.modified = false;
 
@@ -315,13 +291,10 @@ public class Message extends DataFrame implements Cloneable
   /**
    * Create an message that is a response to the given message.
    *
-   * @param request The message representing the requesting message.
-   * 
    * @return An message with all header fields filled with their complementing 
    *         values from the given message or null if the argument was null.
    */
-  public Message createResponse()
-  {
+  public Message createResponse() {
     return createResponse( this );
   }
 
@@ -333,8 +306,7 @@ public class Message extends DataFrame implements Cloneable
    * 
    * @return A 16 byte identifier for this message instance.
    */
-  byte[] genId()
-  {
+  byte[] genId() {
     UUID id = UUID.randomUUID();
     ByteBuffer bb = ByteBuffer.wrap( new byte[16] );
     bb.putLong( id.getMostSignificantBits() );
@@ -363,33 +335,25 @@ public class Message extends DataFrame implements Cloneable
    * 
    * @return  The current cached value of the flags for this message.
    */
-  public long getFlags()
-  {
-    if( !flagsResolved )
-    {
+  public long getFlags() {
+    if ( !flagsResolved ) {
       final DataField flagField = getField( Message.FLAGS );
-      if( flagField != null )
-      {
-        if( flagField.isNumeric() )
-        {
+      if ( flagField != null ) {
+        if ( flagField.isNumeric() ) {
           // Yuck!
           Object obj = flagField.getObjectValue();
-          if( obj instanceof Long )
+          if ( obj instanceof Long )
             flags = ( (Long)obj ).longValue();
-          else if( obj instanceof Integer )
+          else if ( obj instanceof Integer )
             flags = ( (Integer)obj ).longValue();
-          else if( obj instanceof Short )
+          else if ( obj instanceof Short )
             flags = ( (Short)obj ).longValue();
           else
             flags = 0;
-        }
-        else
-        {
+        } else {
           flags = 0;
         }
-      }
-      else
-      {
+      } else {
         flags = 0;
       }
       flagsResolved = true;
@@ -408,10 +372,8 @@ public class Message extends DataFrame implements Cloneable
    *
    * @return The data in the group field, null if no group name is found.
    */
-  public String getGroup()
-  {
-    if( ( cachedGroup == null ) && ( getObject( Message.GROUP ) != null ) )
-    {
+  public String getGroup() {
+    if ( ( cachedGroup == null ) && ( getObject( Message.GROUP ) != null ) ) {
       cachedGroup = getObject( Message.GROUP ).toString();
     }
 
@@ -426,13 +388,11 @@ public class Message extends DataFrame implements Cloneable
    *
    * @return The currently set message identifier.
    */
-  public byte[] getId()
-  {
+  public byte[] getId() {
     // return the currently set message identifier
     final Object retval = getObject( Message.IDENTIFIER );
 
-    if( retval != null )
-    {
+    if ( retval != null ) {
       return (byte[])retval;
     }
     return null;
@@ -447,13 +407,11 @@ public class Message extends DataFrame implements Cloneable
    *
    * @return The currently set message key as a string.
    */
-  public String getIdString()
-  {
+  public String getIdString() {
     // return the currently set message identifier
     final Object retval = getObject( Message.IDENTIFIER );
 
-    if( retval != null )
-    {
+    if ( retval != null ) {
       return ByteUtil.bytesToHex( (byte[])retval );
     }
     return null;
@@ -465,8 +423,7 @@ public class Message extends DataFrame implements Cloneable
   /**
    * @return  Returns the priority of this message.
    */
-  public short getPriority()
-  {
+  public short getPriority() {
     return priority;
   }
 
@@ -478,8 +435,7 @@ public class Message extends DataFrame implements Cloneable
    * 
    * @return A priority string for this message instance.
    */
-  public String getPriorityString()
-  {
+  public String getPriorityString() {
     return Message.getPriorityString( priority );
   }
 
@@ -492,10 +448,8 @@ public class Message extends DataFrame implements Cloneable
    * @return The name of the group on which replies to this message are to be
    *         published.
    */
-  public String getReplyGroup()
-  {
-    if( getObject( Message.REPLY ) != null )
-    {
+  public String getReplyGroup() {
+    if ( getObject( Message.REPLY ) != null ) {
       return getObject( Message.REPLY ).toString();
     }
 
@@ -512,13 +466,11 @@ public class Message extends DataFrame implements Cloneable
    * @return The currently set Request Identifier, or null of this message is not
    *         a response to another message or the field does not exist.
    */
-  public byte[] getReplyId()
-  {
+  public byte[] getReplyId() {
     // return the currently set message identifier
     final Object retval = getObject( Message.REPLY_ID );
 
-    if( retval != null )
-    {
+    if ( retval != null ) {
       return (byte[])retval;
     }
     return null;
@@ -534,13 +486,11 @@ public class Message extends DataFrame implements Cloneable
    * @return The currently set Reply Identifier, or null of this message is not
    *         a response to another message or the field does not exist.
    */
-  public String getReplyIdString()
-  {
+  public String getReplyIdString() {
     // return the currently set request identifier
     final Object retval = getObject( Message.REPLY_ID );
 
-    if( retval != null )
-    {
+    if ( retval != null ) {
       return ByteUtil.bytesToHex( (byte[])retval );
     }
     return null;
@@ -554,12 +504,10 @@ public class Message extends DataFrame implements Cloneable
    *
    * @return The MessageAddress representation of the source of this Message.
    */
-  public MessageAddress getSource()
-  {
+  public MessageAddress getSource() {
     final byte[] addr = getBytes( Message.SOURCE );
 
-    if( addr != null )
-    {
+    if ( addr != null ) {
       return new MessageAddress( addr );
     }
 
@@ -574,8 +522,7 @@ public class Message extends DataFrame implements Cloneable
    * 
    * @return  The reference to the originating message group.
    */
-  public MessageChannel getSourceChannel()
-  {
+  public MessageChannel getSourceChannel() {
     return sourceChannel;
   }
 
@@ -587,12 +534,10 @@ public class Message extends DataFrame implements Cloneable
    *
    * @return MessageAddress representation of the destination.
    */
-  public MessageAddress getTarget()
-  {
+  public MessageAddress getTarget() {
     final byte[] addr = getBytes( Message.TARGET );
 
-    if( addr != null )
-    {
+    if ( addr != null ) {
       return new MessageAddress( addr );
     }
 
@@ -611,8 +556,7 @@ public class Message extends DataFrame implements Cloneable
    * 
    * @return  The epoch time in milliseconds.
    */
-  public long getTimestamp()
-  {
+  public long getTimestamp() {
     return timestamp;
   }
 
@@ -631,10 +575,8 @@ public class Message extends DataFrame implements Cloneable
    *
    * @return The data in the type field, null if no type name is found.
    */
-  public String getType()
-  {
-    if( ( cachedType == null ) && ( getObject( Message.TYPE ) != null ) )
-    {
+  public String getType() {
+    if ( ( cachedType == null ) && ( getObject( Message.TYPE ) != null ) ) {
       cachedType = getObject( Message.TYPE ).toString();
     }
 
@@ -655,26 +597,18 @@ public class Message extends DataFrame implements Cloneable
    * 
    * @param bits  The bit field value to set.
    */
-  public void setFlags( final long bits )
-  {
+  public void setFlags( final long bits ) {
     flags = bits;
 
     final DataField flagField = getField( Message.FLAGS );
-    if( flagField == null )
-    {
-      if( flags != 0 )
-      {
+    if ( flagField == null ) {
+      if ( flags != 0 ) {
         put( Message.FLAGS, flags );
       }
-    }
-    else
-    {
-      if( flags != 0 )
-      {
+    } else {
+      if ( flags != 0 ) {
         put( Message.FLAGS, flags );
-      }
-      else
-      {
+      } else {
         remove( Message.FLAGS );
       }
     }
@@ -692,8 +626,7 @@ public class Message extends DataFrame implements Cloneable
    * @param name The name of the group to set; if null, the group will be
    *        removed from the message.
    */
-  public void setGroup( final String name )
-  {
+  public void setGroup( final String name ) {
     put( Message.GROUP, name );
 
     cachedGroup = name;
@@ -711,14 +644,10 @@ public class Message extends DataFrame implements Cloneable
    * 
    * @param priority The priority to set.
    */
-  public void setPriority( final short priority )
-  {
-    if( ( priority > -1 ) && ( priority < Message.priorityNames.length ) )
-    {
+  public void setPriority( final short priority ) {
+    if ( ( priority > -1 ) && ( priority < Message.priorityNames.length ) ) {
       this.priority = (byte)priority;
-    }
-    else
-    {
+    } else {
       throw new IllegalArgumentException( "Invalid value priority argument" );
     }
   }
@@ -732,8 +661,7 @@ public class Message extends DataFrame implements Cloneable
    * @param name The name of the group on which replies to this message are to be
    *        published.
    */
-  public void setReplyGroup( final String name )
-  {
+  public void setReplyGroup( final String name ) {
     put( Message.REPLY, name );
   }
 
@@ -750,8 +678,7 @@ public class Message extends DataFrame implements Cloneable
    * 
    * @param id the bytes representing the identifier of the message
    */
-  public void setReplyId( final byte[] id )
-  {
+  public void setReplyId( final byte[] id ) {
     put( Message.REPLY_ID, id );
   }
 
@@ -763,14 +690,10 @@ public class Message extends DataFrame implements Cloneable
    *
    * @param addr The MessageAddress representation of the source of this Message.
    */
-  public void setSource( final MessageAddress addr )
-  {
-    if( addr != null )
-    {
+  public void setSource( final MessageAddress addr ) {
+    if ( addr != null ) {
       put( Message.SOURCE, addr.getBytes() );
-    }
-    else
-    {
+    } else {
       remove( Message.SOURCE );
     }
   }
@@ -789,8 +712,7 @@ public class Message extends DataFrame implements Cloneable
    * 
    * @param channel  The MessageChannel to set as this messages source.
    */
-  public void setSourceChannel( final MessageChannel channel )
-  {
+  public void setSourceChannel( final MessageChannel channel ) {
     sourceChannel = channel;
   }
 
@@ -802,14 +724,10 @@ public class Message extends DataFrame implements Cloneable
    *
    * @param addr The MessageAddress representation of the target destination.
    */
-  public void setTarget( final MessageAddress addr )
-  {
-    if( addr != null )
-    {
+  public void setTarget( final MessageAddress addr ) {
+    if ( addr != null ) {
       put( Message.TARGET, addr.getBytes() );
-    }
-    else
-    {
+    } else {
       remove( Message.TARGET );
     }
   }
@@ -828,8 +746,7 @@ public class Message extends DataFrame implements Cloneable
    * 
    * @param l  The epoch time in milliseconds to set.
    */
-  public void setTimestamp( final long l )
-  {
+  public void setTimestamp( final long l ) {
     timestamp = l;
     //modified = true;
   }
@@ -846,8 +763,7 @@ public class Message extends DataFrame implements Cloneable
    * @param name The name of the type to set; if null, the type will be removed 
    *             from the message.
    */
-  public void setType( final String name )
-  {
+  public void setType( final String name ) {
     put( Message.TYPE, name );
 
     cachedType = name;
@@ -859,16 +775,14 @@ public class Message extends DataFrame implements Cloneable
   /**
    * Method dump
    */
-  public String dump()
-  {
+  public String dump() {
     return MessageUtil.dump( this );
   }
 
 
 
 
-  public String toString()
-  {
+  public String toString() {
     return MessageUtil.prettyPrint( this, 0 );
   }
 
@@ -880,8 +794,7 @@ public class Message extends DataFrame implements Cloneable
    *
    * @return an XML representation of the message.
    */
-  public String toXml()
-  {
+  public String toXml() {
     return MessageUtil.toXML( this, null );
   }
 

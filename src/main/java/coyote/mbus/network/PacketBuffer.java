@@ -14,14 +14,12 @@ package coyote.mbus.network;
 import coyote.mbus.message.Message;
 
 
-
 /**
  * The PacketBuffer class models a PacketQueue where packets are stored in 
  * their correct order for later retrieval.
  */
 
-public class PacketBuffer extends PacketQueue
-{
+public class PacketBuffer extends PacketQueue {
 
   /**
    * Place the given packet in the buffer in the correct sequence.
@@ -32,50 +30,36 @@ public class PacketBuffer extends PacketQueue
    * 
    * @param packet The packet to place in the buffer.
    */
-  public void buffer( final Packet packet )
-  {
-    if( size() == 0 )
-    {
+  public void buffer( final Packet packet ) {
+    if ( size() == 0 ) {
       super.add( packet );
-    }
-    else
-    {
-      if( packet.sequence < getFirstPacket().sequence )
-      {
+    } else {
+      if ( packet.sequence < getFirstPacket().sequence ) {
         final long first = getFirstPacket().sequence;
 
         // add some placeholders to the beginning
-        for( long x = first - 1; x > packet.sequence; x-- )
-        {
+        for ( long x = first - 1; x > packet.sequence; x-- ) {
           final Packet tmp = new Packet( x );
           tmp.timestamp = packet.timestamp;
           addFirst( tmp );
         }
 
         addFirst( packet );
-      }
-      else if( packet.sequence > getLastPacket().sequence )
-      {
-        for( long x = getLastPacket().sequence + 1; x < packet.sequence; x++ )
-        {
+      } else if ( packet.sequence > getLastPacket().sequence ) {
+        for ( long x = getLastPacket().sequence + 1; x < packet.sequence; x++ ) {
           final Packet tmp = new Packet( x );
           tmp.timestamp = packet.timestamp;
           add( tmp );
         }
 
         add( packet );
-      }
-      else
-      {
+      } else {
         // place the packet inside the list
-        for( int i = 0; i < list.size(); i++ )
-        {
+        for ( int i = 0; i < list.size(); i++ ) {
           final Packet tmp = (Packet)list.get( i );
 
-          if( packet.sequence == tmp.sequence )
-          {
-            synchronized( list )
-            {
+          if ( packet.sequence == tmp.sequence ) {
+            synchronized( list ) {
               list.set( i, packet );
               list.notify();
             }
@@ -89,14 +73,10 @@ public class PacketBuffer extends PacketQueue
 
 
 
-  Packet getFirstPacket()
-  {
-    if( list.size() > 0 )
-    {
+  Packet getFirstPacket() {
+    if ( list.size() > 0 ) {
       return (Packet)list.getFirst();
-    }
-    else
-    {
+    } else {
       return null;
     }
   }
@@ -104,14 +84,10 @@ public class PacketBuffer extends PacketQueue
 
 
 
-  Packet getLastPacket()
-  {
-    if( list.size() > 0 )
-    {
+  Packet getLastPacket() {
+    if ( list.size() > 0 ) {
       return (Packet)list.getLast();
-    }
-    else
-    {
+    } else {
       return null;
     }
   }
@@ -124,12 +100,9 @@ public class PacketBuffer extends PacketQueue
    * 
    * @return true if the buffer set is complete
    */
-  public boolean isComplete()
-  {
-    for( int i = 0; i < list.size(); i++ )
-    {
-      if( ( ( (Packet)list.get( i ) ) ).message == null )
-      {
+  public boolean isComplete() {
+    for ( int i = 0; i < list.size(); i++ ) {
+      if ( ( ( (Packet)list.get( i ) ) ).message == null ) {
         return false;
       }
     }
@@ -153,8 +126,7 @@ public class PacketBuffer extends PacketQueue
    *
    * @see #getNextPacket()
    */
-  public boolean isReady()
-  {
+  public boolean isReady() {
     final Packet first = getFirstPacket();
     return ( ( first != null ) && ( first.message != null ) );
   }
@@ -167,13 +139,10 @@ public class PacketBuffer extends PacketQueue
    * 
    * @return the number of empty packets removed
    */
-  public int makeReady()
-  {
+  public int makeReady() {
     int count = 0;
-    synchronized( list )
-    {
-      while( ( list.size() > 0 ) && !isReady() )
-      {
+    synchronized( list ) {
+      while ( ( list.size() > 0 ) && !isReady() ) {
         list.removeFirst();
         count++;
       }
@@ -201,19 +170,13 @@ public class PacketBuffer extends PacketQueue
    * 
    * @return The first packet in the packet buffer or null if there are no 
    *         packets in the buffer or no buffered packets contained a packet.
-   *         
-   * @see #isReady(); 
    */
-  public Message getNextPacket()
-  {
+  public Message getNextPacket() {
     Message retval = null;
 
-    synchronized( list )
-    {
-      while( retval == null )
-      {
-        if( list.size() > 0 )
-        {
+    synchronized( list ) {
+      while ( retval == null ) {
+        if ( list.size() > 0 ) {
           retval = ( ( (Packet)list.removeFirst() ) ).message;
           list.notify();
         }
@@ -242,21 +205,15 @@ public class PacketBuffer extends PacketQueue
    * 
    * @param seq The packet sequirence 
    */
-  public void expireToPacket( final long seq )
-  {
-    synchronized( list )
-    {
-      for( int i = 0; i < list.size(); i++ )
-      {
+  public void expireToPacket( final long seq ) {
+    synchronized( list ) {
+      for ( int i = 0; i < list.size(); i++ ) {
         final Packet tmp = (Packet)list.get( i );
 
-        if( ( tmp.sequence <= seq ) && ( tmp.message == null ) )
-        {
+        if ( ( tmp.sequence <= seq ) && ( tmp.message == null ) ) {
           list.remove( i );
           i--;
-        }
-        else
-        {
+        } else {
           break;
         }
       } // for
@@ -268,28 +225,22 @@ public class PacketBuffer extends PacketQueue
 
 
 
-  public String dump()
-  {
+  public String dump() {
     final StringBuffer buffer = new StringBuffer();
-    for( int i = 0; i < list.size(); i++ )
-    {
+    for ( int i = 0; i < list.size(); i++ ) {
       final Packet packet = (Packet)list.get( i );
 
       buffer.append( packet.sequence );
       buffer.append( ": " );
       buffer.append( packet.timestamp );
 
-      if( packet.message == null )
-      {
+      if ( packet.message == null ) {
         buffer.append( " empty" );
-      }
-      else
-      {
+      } else {
         buffer.append( " packet:" );
         buffer.append( packet.message.getTimestamp() );
       }
-      if( i + 1 < list.size() )
-      {
+      if ( i + 1 < list.size() ) {
         buffer.append( "\n" );
       }
     }

@@ -14,20 +14,17 @@ package coyote.mbus;
 import coyote.mbus.network.MessageChannel;
 
 
-
 /**
  * The MessageQueueChannel class models a component which models a queue by 
  * synchronizing the processing of received messages with other queued message 
  * channels on the bus.
  */
-public class MessageQueueChannel extends MessageChannel
-{
+public class MessageQueueChannel extends MessageChannel {
 
   /**
    * 
    */
-  public MessageQueueChannel( final MessageChannel channel )
-  {
+  public MessageQueueChannel( final MessageChannel channel ) {
     // TODO Auto-generated constructor stub
   }
 
@@ -37,8 +34,7 @@ public class MessageQueueChannel extends MessageChannel
   /**
    * @param sink
    */
-  public MessageQueueChannel( final MessageSink sink )
-  {
+  public MessageQueueChannel( final MessageSink sink ) {
     super( sink );
     // TODO Auto-generated constructor stub
   }
@@ -49,8 +45,7 @@ public class MessageQueueChannel extends MessageChannel
   /**
    * @param args
    */
-  public static void main( final String[] args )
-  {
+  public static void main( final String[] args ) {
     // TODO Auto-generated method stub
 
   }

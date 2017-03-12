@@ -17,18 +17,20 @@ import java.util.Date;
 
 import coyote.commons.ExceptionUtil;
 
+
 /**
  * 
  */
-public class DefaultLogAppender implements LogAppender
-{
+public class DefaultLogAppender implements LogAppender {
   private final SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat( "yyyyMMdd HHmmss.SSS" );
   private final StringBuffer logBuffer = new StringBuffer();
 
   // Logging print streams
   private PrintStream outStream = System.out;
-  
+
   private volatile boolean enabled = false;
+
+
 
 
   /**
@@ -41,29 +43,35 @@ public class DefaultLogAppender implements LogAppender
    * 
    * @param stream The PrintStream to use for output. If null, System.out is used.
    */
-  public DefaultLogAppender(PrintStream stream){
+  public DefaultLogAppender( PrintStream stream ) {
     outStream.flush();
-    if (stream != null ) outStream = stream;
-    else outStream = System.out;
+    if ( stream != null )
+      outStream = stream;
+    else
+      outStream = System.out;
   }
-  
-  
+
+
+
+
   /**
    * @return the enabled
    */
-  public synchronized boolean isEnabled()
-  {
+  public synchronized boolean isEnabled() {
     return enabled;
   }
+
+
 
 
   /**
    * @param enabled the enabled to set
    */
-  public synchronized void setEnabled( boolean enabled )
-  {
+  public synchronized void setEnabled( boolean enabled ) {
     this.enabled = enabled;
   }
+
+
 
 
   /**
@@ -72,13 +80,15 @@ public class DefaultLogAppender implements LogAppender
    * @param msg The message to format and display
    */
   @Override
-  public synchronized void append( final String msg )
-  {
-    if(enabled){
+  public synchronized void append( final String msg ) {
+    if ( enabled ) {
       outStream.println( formatLogMsg( msg ) );
       outStream.flush();
     }
   }
+
+
+
 
   /**
    * Format the message into a traditional format.
@@ -86,10 +96,8 @@ public class DefaultLogAppender implements LogAppender
    * @param msg
    * @return
    */
-  String formatLogMsg( final String msg )
-  {
-    synchronized( logBuffer )
-    {
+  String formatLogMsg( final String msg ) {
+    synchronized( logBuffer ) {
       logBuffer.delete( 0, logBuffer.length() );
 
       logBuffer.append( DATE_FORMATTER.format( new Date() ) );
@@ -103,12 +111,9 @@ public class DefaultLogAppender implements LogAppender
       logBuffer.append( "." );
       logBuffer.append( elem.getMethodName() );
       logBuffer.append( "():" );
-      if( elem.getLineNumber() < 0 )
-      {
+      if ( elem.getLineNumber() < 0 ) {
         logBuffer.append( "Native Method" );
-      }
-      else
-      {
+      } else {
         logBuffer.append( elem.getLineNumber() );
       }
       logBuffer.append( " - " );
@@ -118,7 +123,5 @@ public class DefaultLogAppender implements LogAppender
       return logBuffer.toString();
     }
   }
-
-
 
 }

@@ -11,9 +11,6 @@
  */
 package coyote.mbus.message;
 
-
-
-
 /**
  * The ClosureMessage class models a special type of packet that represents the
  * channel is closed.
@@ -24,7 +21,6 @@ package coyote.mbus.message;
  * @author Stephan D. Cote' - Enterprise Architecture
  * @version $Revision:$
  */
-public class ClosureMessage extends Message
-{
+public class ClosureMessage extends Message {
 
 }

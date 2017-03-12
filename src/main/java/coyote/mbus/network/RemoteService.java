@@ -35,8 +35,7 @@ import coyote.mbus.message.MessageAddress;
  * regards to protocol processing are sent through the set MessageTransports send
  * method.</p>
  */
-class RemoteService
-{
+class RemoteService {
   private static final long RMTSVC = 66;//Log.getCode( "RMTSVC" );
 
   /** Field udpAddress */
@@ -84,10 +83,8 @@ class RemoteService
    *
    *  @param svc
    */
-  public RemoteService( final MessageMediator svc )
-  {
-    if( svc == null )
-    {
+  public RemoteService( final MessageMediator svc ) {
+    if ( svc == null ) {
       throw new IllegalArgumentException( "MessageTransport argument was null" );
     }
 
@@ -104,8 +101,7 @@ class RemoteService
    * 
    * @return The bytes representing the official identifier of the sent message.
    */
-  public byte[] send( final Message msg )
-  {
+  public byte[] send( final Message msg ) {
     byte[] retval = null;
 
     // ...create a Packet in which it can be transported
@@ -155,8 +151,7 @@ class RemoteService
    * @return True if this node has any outstanding NAKs for frames, False if the
    *         remote node is up-to-date.
    */
-  boolean hasNak()
-  {
+  boolean hasNak() {
     return false;
   }
 
@@ -171,8 +166,7 @@ class RemoteService
    * @return True if the given frame sequence ID represents a missing frame,
    *         false if there are no outstanding NAKs for this frame identifier.
    */
-  boolean hasNak( final long seq )
-  {
+  boolean hasNak( final long seq ) {
     return false;
   }
 
@@ -184,29 +178,20 @@ class RemoteService
    *
    * @param frame The frame that this node should reprocess.
    */
-  void processPacket( final Packet frame )
-  {
-    try
-    {
-      if( frame != null )
-      {
+  void processPacket( final Packet frame ) {
+    try {
+      if ( frame != null ) {
         //Log.append( RMTSVC, "processPacket: ----[ Processing " + frame.getTypeName() + "(" + frame.type + ") sequence = " + frame.sequence + " ]--------------------" );
 
         // / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / /
         // Perform a sequence check
-        if( frame.type == Packet.HEARTBEAT )
-        {
-          if( lastPacket != frame.sequence )
-          {
-            if( lastPacket > -1 )
-            {
-              if( lastPacket < frame.sequence )
-              {
+        if ( frame.type == Packet.HEARTBEAT ) {
+          if ( lastPacket != frame.sequence ) {
+            if ( lastPacket > -1 ) {
+              if ( lastPacket < frame.sequence ) {
                 //Log.error( "processPacket: 1 Heartbeat reports frame loss - expected " + lastPacket + " received " + frame.sequence + " difference of " + ( frame.sequence - lastPacket ) + " frames." );
                 System.err.println( "ERROR: missing " + ( frame.sequence - lastPacket ) + " frames!" );
-              }
-              else
-              {
+              } else {
                 //Log.error( "processPacket: 1 Heartbeat reports frame decremented counter - expected " + lastPacket + " received " + frame.sequence + " difference of " + ( lastPacket - frame.sequence ) + " frames." );
 
                 // It is possible that the packets are being sent out of order
@@ -216,20 +201,15 @@ class RemoteService
 
           // Whatever - for now
           lastPacket = frame.sequence;
-        }
-        else if( frame.type == Packet.MSG )
-        {
-          if( lastPacket + 1 != frame.sequence )
-          {
+        } else if ( frame.type == Packet.MSG ) {
+          if ( lastPacket + 1 != frame.sequence ) {
             //Log.error( "processPacket: 1 Packet OOS from " + toString() + " - expected " + ( lastPacket + 1 ) + " received " + frame.sequence );
 
             // send a nak, place the frame in the node for later retrieval
 
             // Whatever - for now
             lastPacket = frame.sequence;
-          }
-          else
-          {
+          } else {
             // Update the sequence identifiers
             lastPacket = frame.sequence;
 
@@ -243,41 +223,27 @@ class RemoteService
         // This is the heart of the protocol each of the frame types are
         // processed here
 
-        if( frame.type == Packet.ACK )
-        {
+        if ( frame.type == Packet.ACK ) {
           //Log.append( RMTSVC, "processPacket: 2 processing ACK" );
-        }
-        else if( frame.type == Packet.NAK )
-        {
+        } else if ( frame.type == Packet.NAK ) {
           //Log.append( RMTSVC, "processPacket: 2 processing NAK" );
-        }
-        else if( frame.type == Packet.ADMIN )
-        {
+        } else if ( frame.type == Packet.ADMIN ) {
           //Log.append( RMTSVC, "processPacket: 2 processing ADMIN" );
           processAdminPacket( frame );
-        }
-        else if( frame.type == Packet.HEARTBEAT )
-        {
+        } else if ( frame.type == Packet.HEARTBEAT ) {
           //Log.append( RMTSVC, "processPacket: 2 processing HEARTBEAT" );
-        }
-        else if( frame.type == Packet.MSG )
-        {
+        } else if ( frame.type == Packet.MSG ) {
           //Log.append( RMTSVC, "processPacket: 2 processing EVENT" );
-          if( frame.message != null )
-          {
+          if ( frame.message != null ) {
             eventTransport.process( frame.message );
           }
-        }
-        else
-        {
+        } else {
           //Log.append( RMTSVC, "processPacket: 2 processing UNKNOWN" );
         }
 
         //Log.append( RMTSVC, "processPacket: ----[ Finished Processing Received Packet ]------------------------" );
       }
-    }
-    catch( final RuntimeException e )
-    {
+    } catch ( final RuntimeException e ) {
       e.printStackTrace();
     }
   }
@@ -291,34 +257,27 @@ class RemoteService
    *
    * @param frame The Packet to process.
    */
-  private void processAdminPacket( final Packet frame )
-  {
+  private void processAdminPacket( final Packet frame ) {
     //Log.append( RMTSVC, "processAdminPacket: ADMIN frame from " + toString() );
 
     final Message message = frame.message;
 
-    if( message != null )
-    {
+    if ( message != null ) {
       final DataField field = message.getField( "ACTION" );
 
-      if( field != null )
-      {
+      if ( field != null ) {
         final String action = field.getObjectValue().toString();
         //Log.append( RMTSVC, "processAdminPacket: Action field = '" + action + "'" );
 
-        if( action.equalsIgnoreCase( "INSERT" ) )
-        {
+        if ( action.equalsIgnoreCase( "INSERT" ) ) {
           final DataField idField = message.getField( "ENDPOINT" );
           //Log.append( RMTSVC, "processAdminPacket: EndPoint field = '" + idField + "'" );
 
-          if( idField != null )
-          {
-            try
-            {
+          if ( idField != null ) {
+            try {
               final int id = Integer.parseInt( idField.getObjectValue().toString() );
 
-              if( id == endPoint )
-              {
+              if ( id == endPoint ) {
                 //Log.append( RMTSVC, "processAdminPacket: MessageBus IDs match - sending ALERT" );
 
                 final Packet admin = new Packet();
@@ -337,59 +296,40 @@ class RemoteService
                 // Send the frame over the transport
                 eventTransport.send( admin );
               }
-            }
-            catch( final Exception e )
-            {
-            }
-          }
-          else
-          {
+            } catch ( final Exception e ) {}
+          } else {
             //Log.append( RMTSVC, "processAdminPacket: ------------ NO ID FIELD ----------" );
           }
-        }
-        else if( action.equalsIgnoreCase( "ALERT" ) )
-        {
+        } else if ( action.equalsIgnoreCase( "ALERT" ) ) {
           //Log.append( RMTSVC, "processAdminPacket: processing alert" );
 
           final DataField idField = message.getField( "ENDPOINT" );
           //Log.append( RMTSVC, "processAdminPacket: endPoint field: " + idField );
-          if( idField != null )
-          {
+          if ( idField != null ) {
             final DataField alertField = message.getField( "MSG" );
             //Log.append( RMTSVC, "processAdminPacket: endPoint field: " + alertField );
 
-            if( ( alertField != null ) && alertField.getObjectValue().toString().equalsIgnoreCase( "Duplicate MessageBus Identifier" ) )
-            {
+            if ( ( alertField != null ) && alertField.getObjectValue().toString().equalsIgnoreCase( "Duplicate MessageBus Identifier" ) ) {
               //Log.append( RMTSVC, "processAdminPacket: Duplicate MessageBus ID alert" );
 
-              try
-              {
+              try {
                 final int id = Integer.parseInt( idField.getObjectValue().toString() );
 
-                if( id == endPoint )
-                {
+                if ( id == endPoint ) {
                   //Log.append( RMTSVC, "processAdminPacket: Received a bus identifier collision alert on our bus identifier from " + toString() );
                 }
-              }
-              catch( final Exception e )
-              {
+              } catch ( final Exception e ) {
                 //Log.error( "processAdminPacket: exception checking Re-selecting a bus identifier " + e.getMessage() );
               }
             }
           }
-        }
-        else if( action.equalsIgnoreCase( "WITHDRAW" ) )
-        {
+        } else if ( action.equalsIgnoreCase( "WITHDRAW" ) ) {
           //Log.append( RMTSVC, "processAdminPacket: processing withdrawal of node " + toString() );
-        }
-        else
-        {
+        } else {
           //Log.append( RMTSVC, "processAdminPacket: received action of '" + action + "' from " + toString() );
         }
       }
-    }
-    else
-    {
+    } else {
       // Log.append( RMTSVC, "processAdminPacket: NO EVENT ENCLOSED" );
     }
 
@@ -399,13 +339,7 @@ class RemoteService
 
 
 
-  /**
-   * Method toString
-   *
-   * @return
-   */
-  public String toString()
-  {
+  public String toString() {
     return new String( "RemoteService:" + endPoint + " Packet:" + lastPacket + " Addr:" + udpAddress.getHostAddress() + ":" + udpPort + " Service:" + serviceUri );
   }
 }

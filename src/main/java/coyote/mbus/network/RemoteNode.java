@@ -36,8 +36,7 @@ import coyote.mbus.message.Message;
  * <p>Only the sequencing portion of the protocol is handled in this class, and 
  * therefore only the MSG and HEARBEAT frames are passed to this class.</p>
  */
-public class RemoteNode
-{
+public class RemoteNode {
   /** Our logging category */
   public static final String LOG_CATEGORY = "RMTNODE";
 
@@ -132,15 +131,12 @@ public class RemoteNode
    * @param rep The remote endpoint identifier (what we logically represent)
    * @param sa the Socket Address of the node for point-to-point communication
    */
-  RemoteNode( final MessageMediator transport, final long lep, final PacketQueue cache, final long rep, final InetSocketAddress sa )
-  {
-    if( transport == null )
-    {
+  RemoteNode( final MessageMediator transport, final long lep, final PacketQueue cache, final long rep, final InetSocketAddress sa ) {
+    if ( transport == null ) {
       throw new IllegalArgumentException( "MessageMediator argument was null" );
     }
 
-    if( cache == null )
-    {
+    if ( cache == null ) {
       throw new IllegalArgumentException( "PacketQueue cache argument was null" );
     }
 
@@ -151,13 +147,10 @@ public class RemoteNode
     firstSeen = System.currentTimeMillis();
     endpointSocketAddress = sa;
 
-    try
-    {
+    try {
       channel = DatagramChannel.open();
       channel.connect( endpointSocketAddress );
-    }
-    catch( final IOException e )
-    {
+    } catch ( final IOException e ) {
       ERR.append( "Could not establish a datagram channel to " + endpointSocketAddress + " - " + e.getMessage() );
     }
 
@@ -171,8 +164,7 @@ public class RemoteNode
    * 
    * @param appender the appender to use for log messages.
    */
-  public void setLogAppender( LogAppender appender )
-  {
+  public void setLogAppender( LogAppender appender ) {
     LOG = appender;
   }
 
@@ -184,8 +176,7 @@ public class RemoteNode
    * 
    * @param appender the appender to use for error messages.
    */
-  public void setErrorAppender( LogAppender appender )
-  {
+  public void setErrorAppender( LogAppender appender ) {
     ERR = appender;
   }
 
@@ -197,12 +188,9 @@ public class RemoteNode
    * 
    * @param packet The packet that this node should process.
    */
-  void processPacket( final Packet packet )
-  {
-    try
-    {
-      if( packet != null )
-      {
+  void processPacket( final Packet packet ) {
+    try {
+      if ( packet != null ) {
         lastSeen = System.currentTimeMillis();
 
         LOG.append( "Processing packet " + packet + " for remote node " + remoteEndPoint + " at address " + endpointSocketAddress );
@@ -212,25 +200,19 @@ public class RemoteNode
         // data. Simply check the sequencing and pass to the transport for 
         // processing. Normally processing involves routing the message for 
         // delivery to the mediator listeners.
-        if( packet.type == Packet.MSG )
-        {
+        if ( packet.type == Packet.MSG ) {
           LOG.append( "Received a message packet #" + packet.sequence + " - " + packet.toString() );
 
           // always allow frame 1 which implies a reset in sequencing
-          if( ( lastPacket + 1 != packet.sequence ) && ( packet.sequence != 1 ) )
-          {
+          if ( ( lastPacket + 1 != packet.sequence ) && ( packet.sequence != 1 ) ) {
             // if this node has an established last sequence value...
-            if( lastPacket > -1 )
-            {
+            if ( lastPacket > -1 ) {
               // and if that that last sequence is greater than this packet we 
               // just received...
-              if( lastPacket + 1 > packet.sequence )
-              {
+              if ( lastPacket + 1 > packet.sequence ) {
                 // possible duplicate packet; log the duplication
                 LOG.append( "Frame OOS from " + toString() + " - expected " + ( lastPacket + 1 ) + " received " + packet.sequence + " - Ignoring duplicate frame" );
-              }
-              else
-              {
+              } else {
                 LOG.append( "Message packet reports dropped packet from " + toString() + " - expected " + ( lastPacket + 1 ) + " received " + packet.sequence + " difference of " + ( packet.sequence - ( lastPacket + 1 ) ) + " frames." );
 
                 // looks like at least one frame is missing; Send a NAK for 
@@ -244,35 +226,27 @@ public class RemoteNode
                 LOG.append( "Frame OOS from " + toString() + " - expected " + ( lastPacket + 1 ) + " received " + packet.sequence + " - Sent a NAK for missing frame(s) - Packet buffer now contains " + packetBuffer.size() + " entries:\n" + packetBuffer.dump() );
 
               }
-            }
-            else
-            {
+            } else {
               // This is a new node, so use the present packet sequence as our 
               // starting point
               lastPacket = packet.sequence;
 
-              if( packet.message != null )
-              {
+              if ( packet.message != null ) {
                 packet.message.setTimestamp( lastSeen );
                 packetTransport.process( packet.message );
               }
 
             } // if new node or not
 
-          }
-          else
-          {
+          } else {
             // check to see if we have any frames in the buffer. This indicates 
             // we have at least one outstanding packet and we can not pass this 
             // packet to the transport until the buffer is complete with all 
             // packets in their proper sequence
-            if( packetBuffer.size() > 1 )
-            {
+            if ( packetBuffer.size() > 1 ) {
               packetBuffer.buffer( packet );
               LOG.append( "There are outstanding frames to be received, buffering frame for sequenced delivery - Packet buffer now contains " + packetBuffer.size() + " entries:\n" + packetBuffer.dump() );
-            }
-            else
-            {
+            } else {
               // Happy path... Received the expected packet from the remote node 
               // in its proper sequence with no outstanding packets expected.
 
@@ -280,8 +254,7 @@ public class RemoteNode
               lastPacket = packet.sequence;
 
               // If there is a packet for processing...
-              if( packet.message != null )
-              {
+              if ( packet.message != null ) {
                 // ...timestamp the packet...
                 packet.message.setTimestamp( lastSeen );
 
@@ -300,31 +273,23 @@ public class RemoteNode
         // nodes in sync with each other. These packets usually follow a standard 
         // OAM formatting convention where standard names and types are used 
         // consistently across all OAM messages.
-        else if( packet.type == Packet.HEARTBEAT )
-        {
+        else if ( packet.type == Packet.HEARTBEAT ) {
           LOG.append( "Processing HEARTBEAT packet " + packet + " for remote node " + remoteEndPoint + " at address " + endpointSocketAddress );
 
           // Perform a sequence check
-          if( lastPacket != packet.sequence )
-          {
-            if( lastPacket > -1 )
-            {
-              if( lastPacket < packet.sequence )
-              {
+          if ( lastPacket != packet.sequence ) {
+            if ( lastPacket > -1 ) {
+              if ( lastPacket < packet.sequence ) {
                 LOG.append( "Heartbeat reports dropped packet from " + toString() + " - expected " + ( lastPacket + 1 ) + " received " + packet.sequence + " difference of " + ( packet.sequence - ( lastPacket + 1 ) ) + " frames." );
                 nak( lastPacket + 1 );
-              }
-              else
-              {
+              } else {
                 LOG.append( "Heartbeat reports packet decremented counter - expected " + ( lastPacket + 1 ) + " received " + packet.sequence + " difference of " + ( lastPacket - ( lastPacket + 1 ) ) + " packets. Ignoring heartbeat sequence and will wait for next exoected packet." );
 
                 // It is possible that the packets are being sent out of order
                 // or the remote node lost its mind. Current strategy is to
                 // honor the sequence number
               }
-            }
-            else
-            {
+            } else {
               // happy path
               lastPacket = packet.sequence;
             } // new node check
@@ -332,38 +297,28 @@ public class RemoteNode
           } // OOS check
 
           // process heartbeat packet as it will contain useful state data
-          if( packet.message != null )
-          {
-            if( ( tcpAddress == null ) || ( tcpPort < 0 ) )
-            {
+          if ( packet.message != null ) {
+            if ( ( tcpAddress == null ) || ( tcpPort < 0 ) ) {
               // try to retrieve TCP address:port by placing the message in a
               // special OAM message which contain handy accessor methods 
               final OamMessage oam = new OamMessage( packet.message );
 
-              if( tcpAddress == null )
-              {
+              if ( tcpAddress == null ) {
                 final String addr = oam.getTcpAddress();
 
-                try
-                {
+                try {
                   tcpAddress = InetAddress.getByName( addr );
-                }
-                catch( final UnknownHostException e )
-                {
+                } catch ( final UnknownHostException e ) {
                   tcpAddress = udpAddress;
 
                   e.printStackTrace();
                 }
               } // address
 
-              if( tcpPort < 0 )
-              {
-                try
-                {
+              if ( tcpPort < 0 ) {
+                try {
                   tcpPort = Integer.parseInt( oam.getTcpPort() );
-                }
-                catch( final NumberFormatException e )
-                {
+                } catch ( final NumberFormatException e ) {
                   tcpPort = 0;
                 }
               } // port
@@ -381,24 +336,20 @@ public class RemoteNode
 
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         // Retransmit frames answer our NAK frames
-        else if( packet.type == Packet.RETRANSMIT )
-        {
+        else if ( packet.type == Packet.RETRANSMIT ) {
           LOG.append( "Received a RETRANSMIT packet #" + packet.sequence + " - " + packet.toString() );
 
           // reset our NAK count so we give the sender more time to resend data
           nakCount = 0;
 
           // if this is for a packet later in the sequence
-          if( packet.sequence > lastPacket )
-          {
+          if ( packet.sequence > lastPacket ) {
             LOG.append( "Placing RETRANSMIT packet #" + packet.sequence + " in buffer" );
 
             // place the frame in the proper location in the buffer
             packetBuffer.buffer( packet );
             LOG.append( "Packet buffer now contains " + packetBuffer.size() + " entries:\n" + packetBuffer.dump() );
-          }
-          else
-          {
+          } else {
             // else ignore the frame we have already received
             LOG.append( "Ignoring RETRANSMIT packet #" + packet.sequence + "; have already received packet" );
           }
@@ -408,8 +359,7 @@ public class RemoteNode
 
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         // Expired frames answer our NAK frames
-        else if( packet.type == Packet.EXPIRED )
-        {
+        else if ( packet.type == Packet.EXPIRED ) {
           LOG.append( "Received an EXPIRED packet to seq#" + packet.sequence + " - " + packet.toString() );
 
           // take frames out of the buffer, they won't be coming
@@ -429,8 +379,7 @@ public class RemoteNode
         // by the NAKer.  A NAK may result in an expired packet being sent and a 
         // series RETRANSMIT packets which will get the NAKer back in sync with 
         // packets in our cache
-        else if( packet.type == Packet.NAK )
-        {
+        else if ( packet.type == Packet.NAK ) {
           // TODO implement cry baby protocol where frequent NAKers get flagged for special treatment
           LOG.append( "NAK packet received from " + endpointSocketAddress + " for packet #" + packet.sequence + " for a total of " + nakTotal + "; recently sent " + nakCount + " since last successful delivery" );
 
@@ -438,18 +387,14 @@ public class RemoteNode
           // to know which node should process the NAK because some nodes often 
           // mistakenly broadcast their NAKs.
 
-          if( packet.message != null )
-          {
+          if ( packet.message != null ) {
             final OamMessage oam = new OamMessage( packet.message );
             final String ep = oam.getEndPoint();
 
-            if( ep != null )
-            {
-              try
-              {
+            if ( ep != null ) {
+              try {
                 final long epid = Long.parseLong( ep );
-                if( this.localEndPoint == epid )
-                {
+                if ( this.localEndPoint == epid ) {
                   LOG.append( "Retrieved a NAK for this node - processing..." );
 
                   // the current packet sequence with which we are dealing
@@ -464,8 +409,7 @@ public class RemoteNode
                   LOG.append( "Retrieved a cached packet of " + retrans );
 
                   // If we did not have the requested packet in our cache
-                  if( retrans != null )
-                  {
+                  if ( retrans != null ) {
                     // send an EXPIRED packet to all nodes to stem the tide of possible 
                     // NAK storms; give the last sequence we have in our cache
                     retval = new Packet();
@@ -490,8 +434,7 @@ public class RemoteNode
                   LOG.append( "Starting resend with a cached packet of " + retrans );
 
                   // send all packets in our cache
-                  while( retrans != null )
-                  {
+                  while ( retrans != null ) {
                     // if it is, RETRANSMIT the packet in the new frame
                     retval = new Packet();
                     retval.setType( Packet.RETRANSMIT );
@@ -502,13 +445,10 @@ public class RemoteNode
 
                     // Send the RETRANSMIT packet
                     // packetTransport.send( retval );
-                    try
-                    {
+                    try {
                       final int sent = channel.write( ByteBuffer.wrap( retval.getBytes() ) );
                       LOG.append( "Retransmitted " + sent + " bytes of packet " + retval.sequence + " to " + endpointSocketAddress );
-                    }
-                    catch( final Exception e )
-                    {
+                    } catch ( final Exception e ) {
                       ERR.append( "Problems retransmitting packet #" + retval.sequence + " to " + endpointSocketAddress + " - " + e.getMessage() + "\n" + ExceptionUtil.stackTrace( e ) );
                     }
 
@@ -518,28 +458,18 @@ public class RemoteNode
 
                   LOG.append( "Resend loop complete" );
 
-                }
-                else
-                {
+                } else {
                   LOG.append( "Received a NAK from " + endpointSocketAddress + " for another node (" + epid + ") ignoring NAK packet" );
                 }
-              }
-              catch( final NumberFormatException e )
-              {
+              } catch ( final NumberFormatException e ) {
                 LOG.append( "Received a non-numeric endpoint identifier of " + ep + " from " + endpointSocketAddress + " - ignoring NAK" );
-              }
-              catch( final Exception e )
-              {
+              } catch ( final Exception e ) {
                 ERR.append( "Could not process NAK " + packet + " for remote node " + remoteEndPoint + " at address " + endpointSocketAddress + " reason:" + e.getMessage() + "\n" + ExceptionUtil.stackTrace( e ) );
               }
-            }
-            else
-            {
+            } else {
               LOG.append( "Received a NAK from " + endpointSocketAddress + " with no EndPoint - impossible to know if NAK is for this node or not; ignoring" );
             }
-          }
-          else
-          {
+          } else {
             LOG.append( "Received a NAK from " + endpointSocketAddress + " with no packet containing an EndPoint - impossible to know if NAK is for this node or not; ignoring" );
           }
 
@@ -547,23 +477,17 @@ public class RemoteNode
         }
 
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        else if( packet.type == Packet.ADMIN )
-        {
+        else if ( packet.type == Packet.ADMIN ) {
           LOG.append( "Received an ADMIN packet to seq#" + packet.sequence + " - " + packet.toString() );
 
           // The transport handles all ADMIN frames, particulary looking for
           // INSERT and WITHDRAW. We could look for some specifics here as well
-          if( lastPacket + 1 != packet.sequence )
-          {
-            if( lastPacket > -1 )
-            {
-              if( lastPacket + 1 > packet.sequence )
-              {
+          if ( lastPacket + 1 != packet.sequence ) {
+            if ( lastPacket > -1 ) {
+              if ( lastPacket + 1 > packet.sequence ) {
                 // possible duplicate frame
                 LOG.append( "Duplicate packet from " + toString() + " - expected " + ( lastPacket + 1 ) + " received " + packet.sequence + " - Ignoring packet" );
-              }
-              else
-              {
+              } else {
                 LOG.append( "ADMIN packet reports dropped packet from " + toString() + " - expected " + ( lastPacket + 1 ) + " received " + packet.sequence + " difference of " + ( packet.sequence - ( lastPacket + 1 ) ) + " frames." );
 
                 // Send a NAK for expected frame
@@ -575,15 +499,11 @@ public class RemoteNode
 
                 LOG.append( "ADMIN packet OOS from " + toString() + " - expected " + ( lastPacket + 1 ) + " received " + packet.sequence + " - Sent a NAK for missing packets(s) - Packet buffer now contains " + packetBuffer.size() + " entries:\n" + packetBuffer.dump() );
               }
-            }
-            else
-            {
+            } else {
               // This is a new node, so use the present packet sequence
               lastPacket = packet.sequence;
             }
-          }
-          else
-          {
+          } else {
             // here is where we can do some QoS administration
             // Explicit ACKs for all packets
             // Encryption
@@ -593,8 +513,7 @@ public class RemoteNode
           LOG.append( "Completed ADMIN processing" );
         }
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        else if( packet.type == Packet.ACK )
-        {
+        else if ( packet.type == Packet.ACK ) {
           // that's nice... so what do we do now?
         }
 
@@ -606,13 +525,11 @@ public class RemoteNode
       // packets that may never come.
 
       // If our NAKs are not being honored in a timely fashion...
-      if( nakCount >= RemoteNode.NAK_COUNT_LIMIT )
-      {
+      if ( nakCount >= RemoteNode.NAK_COUNT_LIMIT ) {
         // pop off all the frames we are missing up to the next packet, which 
         // makes this buffer ready or the buffer is empty
         final int lost = packetBuffer.makeReady();
-        if( lost > 0 )
-        {
+        if ( lost > 0 ) {
           ERR.append( "Sent " + nakCount + "NAK pacckets without a RETRANSMIT - lost " + lost + " messages" );
           lastPacket += lost;
         }
@@ -620,11 +537,9 @@ public class RemoteNode
       }
 
       // While we have ordered frames ready for processing...
-      while( packetBuffer.isReady() )
-      {
+      while ( packetBuffer.isReady() ) {
         final Packet nextPacket = packetBuffer.getFirstPacket();
-        if( nextPacket != null )
-        {
+        if ( nextPacket != null ) {
           // update our last frame sequence id
           lastPacket = nextPacket.sequence;
 
@@ -635,9 +550,7 @@ public class RemoteNode
 
       // Remove any old frames that may never come
       packetBuffer.expire( 6000 ); //MicroBus.EXPIRATION_INTERVAL );
-    }
-    catch( final Throwable t )
-    {
+    } catch ( final Throwable t ) {
       ERR.append( "Could not process packet " + packet + " for remote node " + remoteEndPoint + " at address " + endpointSocketAddress + " reason:" + t.getMessage() + "\n" + ExceptionUtil.stackTrace( t ) );
     }
 
@@ -646,8 +559,7 @@ public class RemoteNode
 
 
 
-  public void nak( final long sequence )
-  {
+  public void nak( final long sequence ) {
     final Packet retval = new Packet();
     retval.type = Packet.NAK;
     retval.endPoint = localEndPoint;
@@ -663,15 +575,12 @@ public class RemoteNode
     {
       LOG.append( "Sending NAK for seq# " + sequence + " to " + endpointSocketAddress );
 
-      try
-      {
+      try {
         // Write the packet to the channel which only sends and receives packets 
         // to and from our remote node
         final int sent = channel.write( ByteBuffer.wrap( retval.getBytes() ) );
         LOG.append( "Sent a NAK packet of " + sent + " bytes for packet #" + sequence + " to " + endpointSocketAddress );
-      }
-      catch( final IOException e )
-      {
+      } catch ( final IOException e ) {
         ERR.append( "Could not send a NAK to " + endpointSocketAddress + " - " + e.getMessage() );
       }
     }
@@ -681,16 +590,11 @@ public class RemoteNode
 
 
 
-  public void close()
-  {
-    if( channel != null )
-    {
-      try
-      {
+  public void close() {
+    if ( channel != null ) {
+      try {
         channel.close();
-      }
-      catch( final IOException e )
-      {
+      } catch ( final IOException e ) {
         channel.socket().close();
       }
 
@@ -704,8 +608,7 @@ public class RemoteNode
   /**
    * @return Nice human-readble representation of the RemoteNode object
    */
-  public String toString()
-  {
+  public String toString() {
     return new String( "Node:" + remoteEndPoint + " Frame:" + lastPacket + " Addr:" + udpAddress.getHostAddress() + ":" + udpPort + " NAKs:" + nakCount + "-" + nakTotal + " TCP:" + serviceUri );
   }
 
@@ -715,8 +618,7 @@ public class RemoteNode
   /**
    * @return  The last heartbeat packet received from the remote node (may be  null)
    */
-  public Message getLastHeartbeat()
-  {
+  public Message getLastHeartbeat() {
     return lastHeartbeat;
   }
 
@@ -726,8 +628,7 @@ public class RemoteNode
   /**
    * @return True if the expiration time has expired since the last packet.
    */
-  public boolean isExpired()
-  {
+  public boolean isExpired() {
     return ( ( System.currentTimeMillis() - lastSeen ) > ( RemoteNode.EXPIRATION_TIMEOUT * 1.25 ) );
   }
 
@@ -737,8 +638,7 @@ public class RemoteNode
   /**
    * @return  True if we have received the withdrawal packet from the node, false otherwise.
    */
-  public boolean isWithdrawn()
-  {
+  public boolean isWithdrawn() {
     return withdrawn;
   }
 

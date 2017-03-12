@@ -1159,9 +1159,6 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
 
 
 
-  /**
-   * @see coyote.mbus.network.NetworkServiceHandler#fireGroupJoined(java.lang.String, coyote.mbus.network.MessageChannel)
-   */
   public void fireGroupJoined( final String group, final MessageChannel channel ) {
     LOG.append( channel + " joined the '" + group + "' group" );
     send( OamMessage.createJoinMessage( group ), Packet.ADMIN );
@@ -1170,9 +1167,6 @@ public final class MessageBus implements NetworkServiceHandler, MessageMediator,
 
 
 
-  /**
-   * @see coyote.mbus.network.NetworkServiceHandler#fireGroupLeave(java.lang.String, coyote.mbus.network.MessageChannel)
-   */
   public void fireGroupLeave( final String group, final MessageChannel channel ) {
     LOG.append( channel + " left the '" + group + "' group" );
     send( OamMessage.createLeaveMessage( group ), Packet.ADMIN );

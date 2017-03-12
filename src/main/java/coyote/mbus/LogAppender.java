@@ -14,8 +14,7 @@ package coyote.mbus;
 /**
  * Very simple interface to a logging object.
  */
-public interface LogAppender
-{
+public interface LogAppender {
 
   /**
    * Append the given message to the log.

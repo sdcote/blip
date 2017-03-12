@@ -64,8 +64,7 @@ import coyote.commons.network.IpNetwork;
  * TODO Negiotiate session-level QoS - like IAM/EAM, priority, encryption, authentication, etc. 
  * TODO Use the ClosureMessage object to signal disconnect.
  */
-class Bridge implements NetworkServiceHandler
-{
+class Bridge implements NetworkServiceHandler {
   /** The socket channel we use to send and receive TCP data */
   // not needed as we can get this from the selection key private final SocketChannel socketChannel = null;
   /** The size of the "send" and "receive" buffers for sockets (32768 bytes) */
@@ -147,31 +146,22 @@ class Bridge implements NetworkServiceHandler
    * Constructor used by the driver to create a TCP listener which accepts 
    * connections and creates new TCP sessions.
    * 
-   * @param handler The message handler for all received messages
    * @param addr the address to which we bind
    * @param port the port to which we bind
    */
-  public Bridge( final IpAddress addr, final int port )
-  {
+  public Bridge( final IpAddress addr, final int port ) {
 
-    if( addr != null )
-    {
+    if ( addr != null ) {
       listenAddress = addr;
-    }
-    else
-    {
-      try
-      {
+    } else {
+      try {
         listenAddress = new IpAddress( "0.0.0.0" );
-      }
-      catch( final IpAddressException e )
-      {
+      } catch ( final IpAddressException e ) {
         // should not happen
       }
     }
 
-    if( ( port > 0 ) && ( port < 65535 ) )
-    {
+    if ( ( port > 0 ) && ( port < 65535 ) ) {
       listenPort = port;
     }
 
@@ -188,32 +178,28 @@ class Bridge implements NetworkServiceHandler
    * 
    * @param key
    */
-  public Bridge( final SelectionKey key )
-  {
+  public Bridge( final SelectionKey key ) {
     nioKey = key;
   }
 
 
 
 
-  public void initialize()
-  {
+  public void initialize() {
     //Log.debug( "Bridge is being initialized" );
   }
 
 
 
 
-  public void terminate()
-  {
+  public void terminate() {
     //Log.debug( "Bridge is being terminated" );
   }
 
 
 
 
-  public void close()
-  {
+  public void close() {
     //Log.debug( "Bridge is being closed" );
   }
 
@@ -223,25 +209,21 @@ class Bridge implements NetworkServiceHandler
   /* (non-Javadoc)
    * @see net.bralyn.network.NetworkServiceHandler#accept(java.nio.channels.SelectionKey)
    */
-  public void accept( final SelectionKey key )
-  {
+  public void accept( final SelectionKey key ) {
     //Log.debug( "Bridge is accepting a connection" );
 
-    try
-    {
+    try {
       final SocketChannel socketChannel = ( (ServerSocketChannel)key.channel() ).accept();
       //Log.info( "Connection from " + socketChannel.socket().getRemoteSocketAddress() );
 
       // Use ACL to determine if the connection should be accepted
-      if( ACL.allows( socketChannel.socket().getInetAddress() ) )
-      {
+      if ( ACL.allows( socketChannel.socket().getInetAddress() ) ) {
         //Log.info( "Passed ACL check" );
         socketChannel.socket().setSendBufferSize( Bridge.SOCKET_BUFFER_SIZE );
         socketChannel.socket().setReceiveBufferSize( Bridge.SOCKET_BUFFER_SIZE );
         socketChannel.configureBlocking( false );
 
-        if( socketChannel != null )
-        {
+        if ( socketChannel != null ) {
           // Create a new TCP listener to service this connection/session
           final Bridge session = new Bridge( key );
 
@@ -255,31 +237,22 @@ class Bridge implements NetworkServiceHandler
           session.initialize();
 
           final Selector selector = key.selector();
-          synchronized( selector )
-          {
+          synchronized( selector ) {
             final SelectionKey clientKey = socketChannel.register( selector, SelectionKey.OP_READ );
             //Log.info( "Accepted connection from " + socketChannel.socket().getRemoteSocketAddress() );
             clientKey.attach( session );
           }
 
         }
-      }
-      else
-      {
+      } else {
         //Log.error( "Failed ACL check, closing connection." );
-        try
-        {
+        try {
           socketChannel.close();
-        }
-        catch( final Exception e )
-        {
-        }
+        } catch ( final Exception e ) {}
         return;
       }
 
-    }
-    catch( final IOException e )
-    {
+    } catch ( final IOException e ) {
       System.out.println( "ERROR (accepting connection): " + e );
     }
 
@@ -291,8 +264,7 @@ class Bridge implements NetworkServiceHandler
   /* (non-Javadoc)
    * @see net.bralyn.network.NetworkServiceHandler#connect(java.nio.channels.SelectionKey)
    */
-  public void connect( final SelectionKey key )
-  {
+  public void connect( final SelectionKey key ) {
     //Log.debug( "Bridge is connecting for some odd reason" );
   }
 
@@ -302,8 +274,7 @@ class Bridge implements NetworkServiceHandler
   /* (non-Javadoc)
    * @see net.bralyn.network.NetworkServiceHandler#getChannel()
    */
-  public AbstractSelectableChannel getChannel()
-  {
+  public AbstractSelectableChannel getChannel() {
     return listenerChannel;
   }
 
@@ -313,8 +284,7 @@ class Bridge implements NetworkServiceHandler
   /* (non-Javadoc)
    * @see net.bralyn.network.NetworkServiceHandler#getKey()
    */
-  public SelectionKey getKey()
-  {
+  public SelectionKey getKey() {
     // TODO Auto-generated method stub
     return null;
   }
@@ -325,14 +295,10 @@ class Bridge implements NetworkServiceHandler
   /* (non-Javadoc)
    * @see net.bralyn.network.NetworkServiceHandler#getServiceUri()
    */
-  public URI getServiceUri()
-  {
-    try
-    {
+  public URI getServiceUri() {
+    try {
       return new URI( "tcp://" + listenAddress.toString() + ":" + listenPort );
-    }
-    catch( final URISyntaxException e )
-    {
+    } catch ( final URISyntaxException e ) {
       e.printStackTrace();
       return null;
     }
@@ -344,8 +310,7 @@ class Bridge implements NetworkServiceHandler
   /* (non-Javadoc)
    * @see net.bralyn.network.NetworkServiceHandler#setChannel(java.nio.channels.spi.AbstractSelectableChannel)
    */
-  public void setChannel( final AbstractSelectableChannel channel )
-  {
+  public void setChannel( final AbstractSelectableChannel channel ) {
     //Log.info( "Assigned a channel of " + channel );
     listenerChannel = channel;
   }
@@ -356,8 +321,7 @@ class Bridge implements NetworkServiceHandler
   /* (non-Javadoc)
    * @see net.bralyn.network.NetworkServiceHandler#setKey(java.nio.channels.SelectionKey)
    */
-  public void setKey( final SelectionKey key )
-  {
+  public void setKey( final SelectionKey key ) {
     // TODO Auto-generated method stub
 
   }
@@ -370,8 +334,7 @@ class Bridge implements NetworkServiceHandler
    * 
    * @see coyote.mbus.network.NetworkServiceHandler#shutdown()
    */
-  public void shutdown()
-  {
+  public void shutdown() {
     // Get the channel from the key
     final ServerSocketChannel socketChannel = (ServerSocketChannel)nioKey.channel();
 
@@ -380,20 +343,14 @@ class Bridge implements NetworkServiceHandler
     //      Log.debug( "Closing connection on " + socketChannel.socket().getLocalSocketAddress() );
     //    }
 
-    try
-    {
+    try {
       // close the connection socket which will also close the channel
       socketChannel.socket().close();
-    }
-    catch( final IOException e )
-    {
-      try
-      {
+    } catch ( final IOException e ) {
+      try {
         // try to close the channel if the socket close failed
         socketChannel.close();
-      }
-      catch( final IOException e1 )
-      {
+      } catch ( final IOException e1 ) {
         // Log our socket closing woes
         //Log.error( "Could not close socket (" + e.getMessage() + ") and could not close channel (" + e1.getMessage() + ")" );
       }
@@ -409,8 +366,7 @@ class Bridge implements NetworkServiceHandler
   /* (non-Javadoc)
    * @see net.bralyn.network.NetworkServiceHandler#write(java.nio.channels.SelectionKey)
    */
-  public void write( final SelectionKey key )
-  {
+  public void write( final SelectionKey key ) {
     // TODO Auto-generated method stub
 
   }
@@ -441,28 +397,23 @@ class Bridge implements NetworkServiceHandler
    * selector will try to return an OP_READ or OP_WRITE event if the remote 
    * host has closed the socket.</p>
    *
-   * @see coyote.mbus.network.nio.NetworkServiceHandler#read(java.nio.channels.SelectionKey)
-   * 
    * @param key
    */
-  public void read( final SelectionKey key )
-  {
+  public void read( final SelectionKey key ) {
 
     final SocketChannel socketChannel = (SocketChannel)key.channel();
 
-//    MicroBus.log( "Reading data from " + socketChannel.socket().getRemoteSocketAddress() );
+    //    MicroBus.log( "Reading data from " + socketChannel.socket().getRemoteSocketAddress() );
 
     int readCount = 0;
 
-    try
-    {
+    try {
       // Read data from the channel into our buffer
       readCount = socketChannel.read( readBuffer );
 
       // check for closed connection
-      if( readCount < 0 )
-      {
-//        MicroBus.log( "Peer '" + socketChannel.socket().getRemoteSocketAddress() + "' closed the connection" );
+      if ( readCount < 0 ) {
+        //        MicroBus.log( "Peer '" + socketChannel.socket().getRemoteSocketAddress() + "' closed the connection" );
 
         // close the connection
         socketChannel.socket().close();
@@ -474,22 +425,17 @@ class Bridge implements NetworkServiceHandler
         return; // early exit
       }
 
-//      MicroBus.log( "Received " + readCount + " bytes from " + socketChannel.socket().getRemoteSocketAddress() );
+      //      MicroBus.log( "Received " + readCount + " bytes from " + socketChannel.socket().getRemoteSocketAddress() );
 
       // flip the buffer to process what we have received so far
       readBuffer.flip();
-    }
-    catch( final IOException e )
-    {
-//      MicroBus.log( "IO problems with peer '" + socketChannel.socket().getRemoteSocketAddress() + "' = reason: " + e.getMessage() );
+    } catch ( final IOException e ) {
+      //      MicroBus.log( "IO problems with peer '" + socketChannel.socket().getRemoteSocketAddress() + "' = reason: " + e.getMessage() );
 
       // close the connection
-      try
-      {
+      try {
         socketChannel.socket().close();
-      }
-      catch( final IOException e1 )
-      {
+      } catch ( final IOException e1 ) {
         // probably what caused the problem anyways
       }
 
@@ -500,38 +446,32 @@ class Bridge implements NetworkServiceHandler
       return; // early exit
     }
 
-    try
-    {
+    try {
       // We have read in all we can, now process what is in the buffer so far
-      while( readBuffer.remaining() > 0 )
-      {
-//        MicroBus.log( "Read buffer contains " + readBuffer.remaining() + " bytes to process" );
+      while ( readBuffer.remaining() > 0 ) {
+        //        MicroBus.log( "Read buffer contains " + readBuffer.remaining() + " bytes to process" );
 
         // If we are in a ready state, we are expecting a packet header
-        if( readState == Bridge.READY )
-        {
-//          MicroBus.log( "READY: Reading header" );
+        if ( readState == Bridge.READY ) {
+          //          MicroBus.log( "READY: Reading header" );
 
           // if there is enough data in the buffer to read in the entire header
-          if( readBuffer.remaining() >= Packet.HEADER_SIZE )
-          {
+          if ( readBuffer.remaining() >= Packet.HEADER_SIZE ) {
             // ... read in the header
             readBuffer.get( headerBuffer );
 
-//            MicroBus.log( "Received header:\r\n" + ByteUtil.dump( headerBuffer ) );
+            //            MicroBus.log( "Received header:\r\n" + ByteUtil.dump( headerBuffer ) );
 
             // extract the length of the payload portion of the packet
             remainingOctets = Packet.getPacketLength( headerBuffer );
 
-//            MicroBus.log( "Expecting a payload of " + remainingOctets + " bytes" );
+            //            MicroBus.log( "Expecting a payload of " + remainingOctets + " bytes" );
 
-            if( remainingOctets > 0 )
-            {
+            if ( remainingOctets > 0 ) {
               // determine the length of the entire packet
               final int packetLength = Packet.HEADER_SIZE + remainingOctets;
 
-              if( packetBuffer.capacity() < packetLength )
-              {
+              if ( packetBuffer.capacity() < packetLength ) {
                 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
                 // perform some checks here...if the requested packet length is
                 // too large, it might be best to open a file and dump the 
@@ -540,7 +480,7 @@ class Bridge implements NetworkServiceHandler
                 // the next header.
                 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-//                MicroBus.log( "creating new, larger packet buffer to support packet size of " + packetLength );
+                //                MicroBus.log( "creating new, larger packet buffer to support packet size of " + packetLength );
 
                 packetBuffer = ByteBuffer.allocate( packetLength );
               }
@@ -553,29 +493,22 @@ class Bridge implements NetworkServiceHandler
 
               // change our state
               readState = Bridge.READING;
-            }
-            else
-            {
+            } else {
               // No payload, probably a heartbeat packet to keep ISDN or dialup
               // connections alive.
               processPacket( new Packet( headerBuffer ) );
             }
-          }
-          else
-          {
+          } else {
             // not enough data to read header, break out of while loop and wait
             // for another read to get more data
             break;
           }
-        }
-        else if( readState > Bridge.READY )
-        {
-//          MicroBus.log( "READING: payload into packet buffer " + packetBuffer );
+        } else if ( readState > Bridge.READY ) {
+          //          MicroBus.log( "READING: payload into packet buffer " + packetBuffer );
 
-//          MicroBus.log( "expecting " + remainingOctets + " read buffer contains " + readBuffer.remaining() );
+          //          MicroBus.log( "expecting " + remainingOctets + " read buffer contains " + readBuffer.remaining() );
           // if the expected amount is <= what is remaining in the buffer
-          if( remainingOctets <= readBuffer.remaining() )
-          {
+          if ( remainingOctets <= readBuffer.remaining() ) {
             // / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / /
             // -    -    -    -    -    -    -    -    -    -    -    -    -
             // <gripe>not sure I like allocating a byte array for each chunk...
@@ -594,13 +527,12 @@ class Bridge implements NetworkServiceHandler
 
             // reduce the remaining octet count by the amount we just chunked
             remainingOctets -= chunk.length;
-//            MicroBus.log( "processed a chunk of " + chunk.length + " bytes - remaining = " + remainingOctets + " bytes" );
+            //            MicroBus.log( "processed a chunk of " + chunk.length + " bytes - remaining = " + remainingOctets + " bytes" );
             // -    -    -    -    -    -    -    -    -    -    -    -    -
             // / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / /
 
             // See if we have all our data to complete the packet for processing
-            if( remainingOctets == 0 )
-            {
+            if ( remainingOctets == 0 ) {
               // We have a complete packet buffer according to the header values
               // Pass the packet buffer to the Packet for parsing and pass
               // the Packet to our RemoteService instance for processing.
@@ -620,18 +552,14 @@ class Bridge implements NetworkServiceHandler
         // If we are not READY to read the next packet header or READING the 
         // body of a packet header we previously received, then we must be 
         // looking for our magic cookie to get started.
-        else
-        {
+        else {
           // attempting to find our magic cookie
-          if( readBuffer.remaining() > 2 )
-          {
+          if ( readBuffer.remaining() > 2 ) {
             // while there is enough data to read in an entire cookie
-            while( readBuffer.remaining() > 2 )
-            {
+            while ( readBuffer.remaining() > 2 ) {
               cookieAttempts++;
 
-              if( cookieAttempts > Bridge.COOKIE_READ_LIMIT )
-              {
+              if ( cookieAttempts > Bridge.COOKIE_READ_LIMIT ) {
                 shutdown();
 
                 return;
@@ -639,20 +567,17 @@ class Bridge implements NetworkServiceHandler
 
               byte octet = readBuffer.get();
 
-              if( octet == Bridge.MAGIC[0] )
-              {
+              if ( octet == Bridge.MAGIC[0] ) {
                 octet = readBuffer.get();
 
-                if( octet == Bridge.MAGIC[1] )
-                {
+                if ( octet == Bridge.MAGIC[1] ) {
                   octet = readBuffer.get();
 
-                  if( octet == Bridge.MAGIC[2] )
-                  {
+                  if ( octet == Bridge.MAGIC[2] ) {
                     readState = Bridge.READY;
 
                     readBuffer.compact();
-//                    MicroBus.log( "MAGIC received from " + socketChannel.socket().getRemoteSocketAddress() );
+                    //                    MicroBus.log( "MAGIC received from " + socketChannel.socket().getRemoteSocketAddress() );
 
                     // Now that we have received our magic, we can add our
                     // channel to the event manager for servicing
@@ -665,8 +590,7 @@ class Bridge implements NetworkServiceHandler
             } // while
 
           } // remaining>2
-          else
-          {
+          else {
             // not enough characters in the buffer to read the magic cookie
             break;
           }
@@ -674,11 +598,9 @@ class Bridge implements NetworkServiceHandler
         } // if state
 
       } // while remaining
-    }
-    catch( final Exception e )
-    {
-//      MicroBus.err( "Exception processing frames from " + socketChannel.socket().getRemoteSocketAddress() + "\n" + PacketException.stackTrace( e ) );
-//      MicroBus.err( "PacketBuffer dump:\r\n" + ByteUtil.dump( packetBuffer.array() ) );
+    } catch ( final Exception e ) {
+      //      MicroBus.err( "Exception processing frames from " + socketChannel.socket().getRemoteSocketAddress() + "\n" + PacketException.stackTrace( e ) );
+      //      MicroBus.err( "PacketBuffer dump:\r\n" + ByteUtil.dump( packetBuffer.array() ) );
       //shutdown();
     }
 
@@ -689,8 +611,7 @@ class Bridge implements NetworkServiceHandler
 
 
 
-  private void processPacket( final Packet packet )
-  {
+  private void processPacket( final Packet packet ) {
 
   }
 
@@ -715,14 +636,10 @@ class Bridge implements NetworkServiceHandler
    * 
    * @throws IpAddressException if the specified network is not valid.
    */
-  public void addAclEntry( final String network, final boolean allowed ) throws IpAddressException
-  {
-    if( "DEFAULT".equalsIgnoreCase( network ) )
-    {
+  public void addAclEntry( final String network, final boolean allowed ) throws IpAddressException {
+    if ( "DEFAULT".equalsIgnoreCase( network ) ) {
       ACL.setDefaultAllow( allowed );
-    }
-    else
-    {
+    } else {
       ACL.add( new IpNetwork( network ), allowed );
     }
   }
@@ -736,11 +653,8 @@ class Bridge implements NetworkServiceHandler
    * @param network the network specification to add.
    * @param allowed whether or not TCP connections from the specified network 
    *        will be accepted.
-   * 
-   * @throws IpAddressException if the specified network is not valid.
    */
-  public void addAclEntry( final IpNetwork network, final boolean allowed )
-  {
+  public void addAclEntry( final IpNetwork network, final boolean allowed ) {
     ACL.add( network, allowed );
   }
 
@@ -769,9 +683,8 @@ class Bridge implements NetworkServiceHandler
    *
    * @param rules A semicolon delimited list of rules
    */
-  public void addAclEntry( final String rule ) throws IpAddressException
-  {
-    ACL.parse( rule );
+  public void addAclEntry( final String rules ) throws IpAddressException {
+    ACL.parse( rules );
   }
 
 }

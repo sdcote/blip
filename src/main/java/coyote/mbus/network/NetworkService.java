@@ -38,8 +38,7 @@ import coyote.mbus.NullLogAppender;
  * interested in what has just happened and hands off operation to that 
  * object.</p>
  */
-public class NetworkService implements Runnable
-{
+public class NetworkService implements Runnable {
   /** Object we use to synchronize our operations at the method level. */
   protected Object mutex = new Object();
 
@@ -105,9 +104,7 @@ public class NetworkService implements Runnable
   /**
    * Constructor.
    */
-  public NetworkService()
-  {
-  }
+  public NetworkService() {}
 
 
 
@@ -117,8 +114,7 @@ public class NetworkService implements Runnable
    * 
    * @param appender the appender to use for log messages.
    */
-  public void setLogAppender( LogAppender appender )
-  {
+  public void setLogAppender( LogAppender appender ) {
     LOG = appender;
   }
 
@@ -130,8 +126,7 @@ public class NetworkService implements Runnable
    * 
    * @param appender the appender to use for error messages.
    */
-  public void setErrorAppender( LogAppender appender )
-  {
+  public void setErrorAppender( LogAppender appender ) {
     ERR = appender;
   }
 
@@ -144,10 +139,8 @@ public class NetworkService implements Runnable
    * 
    * @param handler The handler to add.
    */
-  public void stage( final NetworkServiceHandler handler )
-  {
-    if( handler != null )
-    {
+  public void stage( final NetworkServiceHandler handler ) {
+    if ( handler != null ) {
       handlers.add( handler );
     }
   }
@@ -162,8 +155,7 @@ public class NetworkService implements Runnable
    * 
    * @throws NetworkServiceException If the handler could not be initialized.
    */
-  public void add( final NetworkServiceHandler handler ) throws NetworkServiceException
-  {
+  public void add( final NetworkServiceHandler handler ) throws NetworkServiceException {
     addHandler( handler );
   }
 
@@ -173,17 +165,13 @@ public class NetworkService implements Runnable
   /**
    * Method initialize
    */
-  private void initialize()
-  {
+  private void initialize() {
     LOG.append( "NetworkService initializing" );
 
     // attempt to create selector
-    try
-    {
+    try {
       selector = Selector.open();
-    }
-    catch( final IOException e )
-    {
+    } catch ( final IOException e ) {
       ERR.append( "ERROR creating selector: " + e.getClass().getName() + " - " + e.getMessage() + System.getProperty( "line.separator" ) );
     }
 
@@ -205,38 +193,28 @@ public class NetworkService implements Runnable
    * <p>Closing then opening a channel will sometimes result is ChannelClosed 
    * exceptions being thrown.</p>
    */
-  private void reAdd()
-  {
+  private void reAdd() {
     // get a list of handlers
     final NetworkServiceHandler[] handler = new NetworkServiceHandler[handlers.size()];
-    for( int x = 0; x < handlers.size(); handler[x] = (NetworkServiceHandler)handlers.get( x++ ) )
-    {
+    for ( int x = 0; x < handlers.size(); handler[x] = (NetworkServiceHandler)handlers.get( x++ ) ) {
       ;
     }
 
     // clear all the handlers since this could be a restart
-    for( int x = 0; x < handler.length; x++ )
-    {
-      try
-      {
+    for ( int x = 0; x < handler.length; x++ ) {
+      try {
         removeHandler( handler[x] );
-      }
-      catch( final NetworkServiceException e )
-      {
+      } catch ( final NetworkServiceException e ) {
         ERR.append( "Problems removing existing handler during initialization: " + e.getClass().getName() + " - " + e.getMessage() + System.getProperty( "line.separator" ) );
       }
     }
 
     // Add all the handlers we just removed
-    for( int x = 0; x < handler.length; x++ )
-    {
-      try
-      {
+    for ( int x = 0; x < handler.length; x++ ) {
+      try {
         // re-add the handlers effectively re-starting them
         addHandler( handler[x] );
-      }
-      catch( final NetworkServiceException e )
-      {
+      } catch ( final NetworkServiceException e ) {
         ERR.append( "Problems adding existing handler during initialization: " + e.getClass().getName() + " - " + e.getMessage() + System.getProperty( "line.separator" ) );
       }
     }
@@ -249,18 +227,14 @@ public class NetworkService implements Runnable
   /**
    * Method terminate
    */
-  public void terminate()
-  {
-    try
-    {
+  public void terminate() {
+    try {
       final Object[] keys = selector.keys().toArray();
 
-      for( int i = 0; i < keys.length; i++ )
-      {
+      for ( int i = 0; i < keys.length; i++ ) {
         final SelectionKey key = (SelectionKey)keys[i];
 
-        try
-        {
+        try {
           // ask the handler to shutdown first
           ( (NetworkServiceHandler)key.attachment() ).shutdown();
 
@@ -269,24 +243,17 @@ public class NetworkService implements Runnable
 
           // Cancel and de-register the key
           key.cancel();
-        }
-        catch( final Throwable ignore )
-        {
+        } catch ( final Throwable ignore ) {
           // exceptions are OK here, we are closing everything down
         }
       }
 
-      try
-      {
+      try {
         selector.close();
-      }
-      catch( final IOException ignore )
-      {
+      } catch ( final IOException ignore ) {
         // exceptions are OK here, we are closing everything down
       }
-    }
-    catch( final ClosedSelectorException e )
-    {
+    } catch ( final ClosedSelectorException e ) {
       // exceptions are OK here, we are closing everything down
     }
 
@@ -299,11 +266,9 @@ public class NetworkService implements Runnable
   /**
    * This method performs all the work.
    */
-  public void run()
-  {
+  public void run() {
     current_thread = Thread.currentThread();
-    do
-    {
+    do {
       // Setup everything we need to run
       initialize();
 
@@ -311,19 +276,15 @@ public class NetworkService implements Runnable
       // use waitForActive to wait for us to initialize
       setActiveFlag( true );
 
-      while( !isShutdown() )
-      {
-        try
-        {
+      while ( !isShutdown() ) {
+        try {
           // loop while waiting for activity
-          if( ( selector != null ) && selector.isOpen() && ( selector.select( SELECT_WAIT_TIME ) >= 0 ) )
-          {
+          if ( ( selector != null ) && selector.isOpen() && ( selector.select( SELECT_WAIT_TIME ) >= 0 ) ) {
             Object[] keys = null;
 
             keys = selector.selectedKeys().toArray();
 
-            for( int i = 0; i < keys.length; i++ )
-            {
+            for ( int i = 0; i < keys.length; i++ ) {
 
               final SelectionKey key = (SelectionKey)keys[i];
               selector.selectedKeys().remove( key );
@@ -331,35 +292,28 @@ public class NetworkService implements Runnable
               // get the selection key handler from the key attachment
               final NetworkServiceHandler handler = (NetworkServiceHandler)key.attachment();
 
-              if( handler != null )
-              {
+              if ( handler != null ) {
                 LOG.append( "Activity on " + handler.toString() );
                 // inform the handler to accept the connection
-                if( key.isValid() && key.isAcceptable() )
-                {
+                if ( key.isValid() && key.isAcceptable() ) {
                   handler.accept( key );
                 }
 
                 // Have the key handler connect to the accepted connection
-                if( key.isValid() && key.isConnectable() )
-                {
+                if ( key.isValid() && key.isConnectable() ) {
                   handler.connect( key );
                 }
 
                 // Have the handler read from the key
-                if( key.isValid() && key.isReadable() )
-                {
+                if ( key.isValid() && key.isReadable() ) {
                   handler.read( key );
                 }
 
                 // have the key write to the connection
-                if( key.isValid() && key.isWritable() )
-                {
+                if ( key.isValid() && key.isWritable() ) {
                   handler.write( key );
                 }
-              }
-              else
-              {
+              } else {
                 // No key attachment, then cancel the key
                 key.cancel();
               }
@@ -370,19 +324,13 @@ public class NetworkService implements Runnable
 
             // Housekeeping check and run if it is time (usually every few 
             // seconds _not_ every iteration)
-            if( System.currentTimeMillis() >= nextHousekeeping )
-            {
-              synchronized( housekeepers )
-              {
-                for( int x = 0; x < housekeepers.size(); x++ )
-                {
+            if ( System.currentTimeMillis() >= nextHousekeeping ) {
+              synchronized( housekeepers ) {
+                for ( int x = 0; x < housekeepers.size(); x++ ) {
                   final Runnable housekeeper = (Runnable)housekeepers.get( x );
-                  try
-                  {
+                  try {
                     housekeeper.run();
-                  }
-                  catch( final RuntimeException e )
-                  {
+                  } catch ( final RuntimeException e ) {
                     ERR.append( "ERROR during a housekeeping run: " + e.getClass().getName() + " - " + e.getMessage() + System.getProperty( "line.separator" ) );
                   }
                 }
@@ -392,12 +340,9 @@ public class NetworkService implements Runnable
 
           } // if operations are available
 
-        }
-        catch( final Throwable e )
-        {
+        } catch ( final Throwable e ) {
           // We can usually ignore exceptions during shutdown, otherwise...
-          if( !shutdown )
-          {
+          if ( !shutdown ) {
             ERR.append( "ERROR: " + e.getClass().getName() + " - " + e.getMessage() + System.getProperty( "line.separator" ) );
           }
         } // catch
@@ -409,7 +354,7 @@ public class NetworkService implements Runnable
       // Clean up after ourselves
       terminate();
     }
-    while( restart );
+    while ( restart );
 
     // We are no longer running active
     setActiveFlag( false );
@@ -421,10 +366,8 @@ public class NetworkService implements Runnable
   /**
    * @return  whether or not the current thread is set to shutdown.
    */
-  public boolean isShutdown()
-  {
-    synchronized( mutex )
-    {
+  public boolean isShutdown() {
+    synchronized( mutex ) {
       return shutdown;
     }
   }
@@ -438,15 +381,12 @@ public class NetworkService implements Runnable
    * <p>For the UNIX types, this is just like the HUP signal and causes, the
    * thread of execution to perform a normal shutdown, and re-initialize.</p>
    */
-  public void restart()
-  {
-    synchronized( mutex )
-    {
+  public void restart() {
+    synchronized( mutex ) {
       restart = true;
       shutdown = true;
 
-      if( current_thread != null )
-      {
+      if ( current_thread != null ) {
         current_thread.interrupt();
 
         // Make sure suspended threads are resumed so they can shutdown
@@ -469,33 +409,25 @@ public class NetworkService implements Runnable
    * @param timeout The number of milliseconds to wait for the main run loop to
    *        be entered.
    */
-  public void waitForActive( final long timeout )
-  {
-    if( !isActive() )
-    {
+  public void waitForActive( final long timeout ) {
+    if ( !isActive() ) {
       // determine the timeout sentinel value
       final long tout = System.currentTimeMillis() + timeout;
 
       // While we have not reached the sentinel time
-      while( tout > System.currentTimeMillis() )
-      {
+      while ( tout > System.currentTimeMillis() ) {
         // wait on the active lock object
-        synchronized( activeLock )
-        {
-          try
-          {
+        synchronized( activeLock ) {
+          try {
             activeLock.wait( 10 );
-          }
-          catch( final Throwable t )
-          {
+          } catch ( final Throwable t ) {
             // exceptions are OK here, we are just giving other threads a 
             // chance to process by waiting
           }
         }
 
         // if we are now active...
-        if( isActive() )
-        {
+        if ( isActive() ) {
           // ... break out of the time-out while loop
           break;
         }
@@ -509,28 +441,21 @@ public class NetworkService implements Runnable
 
 
 
-  public void waitForTerminated( final long timeout )
-  {
-    if( !terminated )
-    {
+  public void waitForTerminated( final long timeout ) {
+    if ( !terminated ) {
       // determine the timeout sentinel value
       final long tout = System.currentTimeMillis() + timeout;
 
       // While we have not reached the sentinel time
-      while( tout > System.currentTimeMillis() )
-      {
-        try
-        {
+      while ( tout > System.currentTimeMillis() ) {
+        try {
           activeLock.wait( 10 );
-        }
-        catch( final Throwable t )
-        {
+        } catch ( final Throwable t ) {
           // exceptions are OK here, we are just giving other threads a 
           // chance to process by waiting
         }
 
-        if( terminated )
-        {
+        if ( terminated ) {
           break;
         }
 
@@ -547,10 +472,8 @@ public class NetworkService implements Runnable
    * Return whether or not the thread has entered and is currently within the main run loop.
    * @return  True if the ThreadJob has ben initialized and is cycling in the run  loop, False otherwise.
    */
-  public boolean isActive()
-  {
-    synchronized( activeLock )
-    {
+  public boolean isActive() {
+    synchronized( activeLock ) {
       return active;
     }
   }
@@ -572,14 +495,11 @@ public class NetworkService implements Runnable
    *
    * @param flag The boolean value to set to the active flag.
    */
-  protected void setActiveFlag( final boolean flag )
-  {
-    synchronized( activeLock )
-    {
+  protected void setActiveFlag( final boolean flag ) {
+    synchronized( activeLock ) {
       active = flag;
 
-      if( active )
-      {
+      if ( active ) {
         activeLock.notifyAll();
       }
     }
@@ -595,14 +515,11 @@ public class NetworkService implements Runnable
    *
    * @throws NetworkServiceException
    */
-  private void addHandler( final NetworkServiceHandler handler ) throws NetworkServiceException
-  {
-    if( handler != null )
-    {
+  private void addHandler( final NetworkServiceHandler handler ) throws NetworkServiceException {
+    if ( handler != null ) {
       final URI uri = handler.getServiceUri();
 
-      if( uri == null )
-      {
+      if ( uri == null ) {
         throw new NetworkServiceException( "cannot bind: Handler returned a null service URI" );
       }
 
@@ -611,14 +528,12 @@ public class NetworkService implements Runnable
       int port = uri.getPort();
 
       // If we got a negative number, it means that a port was not specified
-      if( port < 0 )
-      {
+      if ( port < 0 ) {
         // Try to use one of the well-known ports as specified by the scheme
         port = UriUtil.getPort( uri.getScheme() );
       }
 
-      if( port < 0 )
-      {
+      if ( port < 0 ) {
         throw new NetworkServiceException( "Could not determine which port to use" );
       }
 
@@ -628,30 +543,22 @@ public class NetworkService implements Runnable
 
       final String host = uri.getHost();
 
-      try
-      {
+      try {
         final InetAddress adr = InetAddress.getByName( host );
 
-        if( adr.isAnyLocalAddress() )
-        {
+        if ( adr.isAnyLocalAddress() ) {
           isa = new InetSocketAddress( port );
-        }
-        else
-        {
+        } else {
 
           // Create a socket address for the specified port
           isa = new InetSocketAddress( adr, port );
 
         } // if host represents a wildcard address
 
-      }
-      catch( final UnknownHostException e2 )
-      {
-      }
+      } catch ( final UnknownHostException e2 ) {}
 
       // Check the URI for a valid TCP or UDP scheme
-      if( UriUtil.isUdp( uri ) )
-      {
+      if ( UriUtil.isUdp( uri ) ) {
         LOG.append( "NetworkService.addHandler: provisioning a UDP service for " + isa );
 
         // TODO Need to check to see if there is already something at this URI
@@ -659,8 +566,7 @@ public class NetworkService implements Runnable
         DatagramChannel channel = null;
 
         // create a datagram channel that supports the URI
-        try
-        {
+        try {
           // Open a datagram channel
           channel = DatagramChannel.open();
 
@@ -691,13 +597,10 @@ public class NetworkService implements Runnable
 
           // Type of service IPTOS_RELIABILITY(0x04) and IPTOS_THROUGHPUT(0x08)
           final int tos = 4 | 8;
-          try
-          {
+          try {
             channel.socket().setTrafficClass( tos );
             LOG.append( "UDP ToS: " + channel.socket().getTrafficClass() );
-          }
-          catch( final SocketException e )
-          {
+          } catch ( final SocketException e ) {
             LOG.append( "UDP traffic class of " + tos + " could not be set, will be ignored" );
           }
 
@@ -711,8 +614,7 @@ public class NetworkService implements Runnable
           key = channel.register( selector, SelectionKey.OP_READ );
 
           LOG.append( "NetworkService.addHandler: UDP key validity check..." );
-          while( !key.isValid() )
-          {
+          while ( !key.isValid() ) {
             // problems with the key for some reason
             ERR.append( "NetworkService.addHandler selector returned an invalid key!" );
             key.cancel();
@@ -734,16 +636,11 @@ public class NetworkService implements Runnable
 
           LOG.append( "NetworkService.addHandler: UDP channel added and initialized" );
 
-        }
-        catch( final Exception e )
-        {
+        } catch ( final Exception e ) {
           boolean sorFlag = false;
-          try
-          {
+          try {
             sorFlag = channel.socket().getReuseAddress();
-          }
-          catch( final SocketException e1 )
-          {
+          } catch ( final SocketException e1 ) {
             ERR.append( "ERROR Can't get SocketOptions: " + e1.getClass().getName() + " - " + e1.getMessage() + System.getProperty( "line.separator" ) );
           }
 
@@ -757,21 +654,15 @@ public class NetworkService implements Runnable
         }
 
         // Add the UDP handler to the list of handlers 
-      }
-      else
-      {
+      } else {
         LOG.append( "NetworkService.addHandler: provisioning a TCP service for " + isa );
 
         // create a ServerSocketChannel to support the URI
-        try
-        {
+        try {
 
-          if( handler.getChannel() != null )
-          {
+          if ( handler.getChannel() != null ) {
             LOG.append( "NetworkService.addHandler: using existing Server Socket Channel" );
-          }
-          else
-          {
+          } else {
             LOG.append( "NetworkService.addHandler: Opening a new Server Socket Channel" );
             // Create a server socket
             final ServerSocketChannel channel = ServerSocketChannel.open();
@@ -811,8 +702,7 @@ public class NetworkService implements Runnable
             LOG.append( "NetworkService.addHandler: handler.channel=" + handler.getChannel() );
             key = handler.getChannel().register( selector, SelectionKey.OP_ACCEPT );
 
-            while( !key.isValid() )
-            {
+            while ( !key.isValid() ) {
               // problems with the key for some reason
               ERR.append( "NetworkService.addHandler selector returned an invalid key! re-registering" );
               key.cancel();
@@ -835,9 +725,7 @@ public class NetworkService implements Runnable
 
           LOG.append( "NetworkService.addHandler: TCP channel added and initialized" );
 
-        }
-        catch( final Exception e )
-        {
+        } catch ( final Exception e ) {
           ERR.append( "ERROR binding socket server to port " + port + ": " + e.getClass().getName() + " - " + e.getMessage() + System.getProperty( "line.separator" ) );
         }
 
@@ -850,14 +738,10 @@ public class NetworkService implements Runnable
 
 
 
-  public void removeHandler( final NetworkServiceHandler handler ) throws NetworkServiceException
-  {
-    if( handler != null )
-    {
-      try
-      {
-        if( !handlers.remove( handler ) )
-        {
+  public void removeHandler( final NetworkServiceHandler handler ) throws NetworkServiceException {
+    if ( handler != null ) {
+      try {
+        if ( !handlers.remove( handler ) ) {
           LOG.append( "Shutting down untracked handler " + handler.getClass().getCanonicalName() );
         }
 
@@ -865,18 +749,14 @@ public class NetworkService implements Runnable
         handler.shutdown();
 
         // These are just to make sure
-        if( handler.getChannel() != null )
-        {
+        if ( handler.getChannel() != null ) {
           handler.getChannel().close();
         }
 
-        if( handler.getKey() != null )
-        {
+        if ( handler.getKey() != null ) {
           handler.getKey().cancel();
         }
-      }
-      catch( final Exception e )
-      {
+      } catch ( final Exception e ) {
         ERR.append( "ERROR while removing a handler: " + e.getClass().getName() + " - " + e.getMessage() + System.getProperty( "line.separator" ) );
       }
     }
@@ -885,8 +765,7 @@ public class NetworkService implements Runnable
 
 
 
-  public int getKeyCount()
-  {
+  public int getKeyCount() {
     return selector.keys().size();
   }
 
@@ -896,15 +775,12 @@ public class NetworkService implements Runnable
   /**
    * Request this object to shutdown.
    */
-  public void shutdown()
-  {
-    synchronized( mutex )
-    {
+  public void shutdown() {
+    synchronized( mutex ) {
       shutdown = true;
       restart = false;
 
-      if( current_thread != null )
-      {
+      if ( current_thread != null ) {
         current_thread.interrupt();
 
         // Make sure suspended threads are resumed so they can shutdown
@@ -920,15 +796,12 @@ public class NetworkService implements Runnable
    * Used when the VM is coming down to ensure everything is closed in one 
    * thread call
    */
-  public void destroy()
-  {
-    synchronized( mutex )
-    {
+  public void destroy() {
+    synchronized( mutex ) {
       shutdown = true;
       restart = false;
 
-      if( current_thread != null )
-      {
+      if ( current_thread != null ) {
         // current_thread.interrupt(); // may cause datagramchannel to close
 
         // Make sure suspended threads are resumed so they can shutdown
@@ -950,14 +823,10 @@ public class NetworkService implements Runnable
    * 
    * @param housekeeper The runnable class to use as the housekeeper.
    */
-  public void addHousekeeper( final Runnable housekeeper )
-  {
-    if( housekeeper != null )
-    {
-      synchronized( housekeepers )
-      {
-        if( !housekeepers.contains( housekeeper ) )
-        {
+  public void addHousekeeper( final Runnable housekeeper ) {
+    if ( housekeeper != null ) {
+      synchronized( housekeepers ) {
+        if ( !housekeepers.contains( housekeeper ) ) {
           housekeepers.add( housekeeper );
         }
       }
@@ -975,17 +844,14 @@ public class NetworkService implements Runnable
    *
    * @param address
    * @param port
-   * @param backlog
    *
    * @return TODO Complete Documentation
    */
-  public static ServerSocketChannel getNextServerSocket( InetAddress address, final int port )
-  {
+  public static ServerSocketChannel getNextServerSocket( InetAddress address, final int port ) {
     int i = port;
     ServerSocketChannel channel = null;
 
-    try
-    {
+    try {
       channel = ServerSocketChannel.open();
 
       // This channel should not block since we are going to use a Selector
@@ -997,9 +863,7 @@ public class NetworkService implements Runnable
       // same address
       channel.socket().setReuseAddress( true );
 
-    }
-    catch( final IOException e1 )
-    {
+    } catch ( final IOException e1 ) {
       e1.printStackTrace();
       return null;
     }
@@ -1007,28 +871,20 @@ public class NetworkService implements Runnable
     // If no address was given, then try to determine our local address so we
     // can use our main address instead of 127.0.0.1 which may be chosen by the
     // VM if it is not specified in the ServerSocket constructor
-    if( address == null )
-    {
+    if ( address == null ) {
       address = IpInterface.getPrimary().getAddress().toInetAddress();
     }
 
-    while( NetworkService.validatePort( i ) != 0 )
-    {
-      try
-      {
-        if( address == null )
-        {
+    while ( NetworkService.validatePort( i ) != 0 ) {
+      try {
+        if ( address == null ) {
           channel.socket().bind( new InetSocketAddress( i ) );
-        }
-        else
-        {
+        } else {
           channel.socket().bind( new InetSocketAddress( address, i ) );
         }
         return channel;
 
-      }
-      catch( final Exception e )
-      {
+      } catch ( final Exception e ) {
         // happens normally when the socket is unavailable, just try the next
         i++;
       }
@@ -1046,14 +902,10 @@ public class NetworkService implements Runnable
    *
    * @return TODO Complete Documentation
    */
-  public static int validatePort( final int port )
-  {
-    if( ( port < 0 ) || ( port > 0xFFFF ) )
-    {
+  public static int validatePort( final int port ) {
+    if ( ( port < 0 ) || ( port > 0xFFFF ) ) {
       return 0;
-    }
-    else
-    {
+    } else {
       return port;
     }
   }

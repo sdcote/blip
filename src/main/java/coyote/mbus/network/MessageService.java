@@ -105,9 +105,6 @@ public class MessageService implements NetworkServiceHandler {
 
 
 
-  /**
-   * @see coyote.mbus.network.message.NetworkServiceHandler#accept(java.nio.channels.SelectionKey)
-   */
   public void accept( final SelectionKey key ) {
     try {
       final SocketChannel socketChannel = ( (ServerSocketChannel)key.channel() ).accept();
@@ -161,9 +158,6 @@ public class MessageService implements NetworkServiceHandler {
 
 
 
-  /**
-   * @see coyote.mbus.network.message.NetworkServiceHandler#connect(java.nio.channels.SelectionKey)
-   */
   public void connect( final SelectionKey key ) {
     LOG.append( "Connected to " + key.attachment() );
   }
@@ -171,9 +165,6 @@ public class MessageService implements NetworkServiceHandler {
 
 
 
-  /**
-   * @see coyote.mbus.network.message.NetworkServiceHandler#getChannel()
-   */
   public AbstractSelectableChannel getChannel() {
     return serverChannel;
   }
@@ -181,9 +172,6 @@ public class MessageService implements NetworkServiceHandler {
 
 
 
-  /**
-   * @see coyote.mbus.network.message.NetworkServiceHandler#getKey()
-   */
   public SelectionKey getKey() {
     return null;
   }
@@ -201,9 +189,6 @@ public class MessageService implements NetworkServiceHandler {
 
 
 
-  /**
-   * @see coyote.mbus.network.message.NetworkServiceHandler#initialize()
-   */
   public void initialize() {
     shutdown = false;
   }
@@ -294,17 +279,11 @@ public class MessageService implements NetworkServiceHandler {
 
 
 
-  /**
-   * @see coyote.mbus.network.message.NetworkServiceHandler#setKey(java.nio.channels.SelectionKey)
-   */
   public void setKey( final SelectionKey key ) {}
 
 
 
 
-  /**
-   * @see coyote.mbus.network.message.NetworkServiceHandler#shutdown()
-   */
   public void shutdown() {
     shutdown = true;
   }
@@ -312,9 +291,6 @@ public class MessageService implements NetworkServiceHandler {
 
 
 
-  /**
-   * @see coyote.mbus.network.message.NetworkServiceHandler#write(java.nio.channels.SelectionKey)
-   */
   public void write( final SelectionKey key ) {
     LOG.append( "Writing" );
   }
@@ -322,17 +298,11 @@ public class MessageService implements NetworkServiceHandler {
 
 
 
-  /**
-   * @see coyote.mbus.network.NetworkServiceHandler#fireGroupJoined(java.lang.String, coyote.mbus.network.MessageChannel)
-   */
   public void fireGroupJoined( final String group, final MessageChannel channel ) {}
 
 
 
 
-  /**
-   * @see coyote.mbus.network.NetworkServiceHandler#fireGroupLeave(java.lang.String, coyote.mbus.network.MessageChannel)
-   */
   public void fireGroupLeave( final String group, final MessageChannel channel ) {}
 
 
@@ -395,8 +365,6 @@ public class MessageService implements NetworkServiceHandler {
    * @param network the network specification to add.
    * @param allowed whether or not TCP connections from the specified network 
    *        will be accepted.
-   * 
-   * @throws IpAddressException if the specified network is not valid.
    */
   public void addAclEntry( final IpNetwork network, final boolean allowed ) {
     ACL.add( network, allowed );
@@ -427,8 +395,8 @@ public class MessageService implements NetworkServiceHandler {
    *
    * @param rules A semicolon delimited list of rules
    */
-  public void addAclEntry( final String rule ) throws IpAddressException {
-    ACL.parse( rule );
+  public void addAclEntry( final String rules ) throws IpAddressException {
+    ACL.parse( rules );
   }
 
 }

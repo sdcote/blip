@@ -14,8 +14,7 @@ package coyote.mbus.network;
 /**
  * Class NetworkServiceException
  */
-public class NetworkServiceException extends Exception
-{
+public class NetworkServiceException extends Exception {
   public static final long serialVersionUID = 134865456L;
 
 
@@ -24,8 +23,7 @@ public class NetworkServiceException extends Exception
   /**
    *
    */
-  public NetworkServiceException()
-  {
+  public NetworkServiceException() {
     super();
   }
 
@@ -35,8 +33,7 @@ public class NetworkServiceException extends Exception
   /**
    * @param message
    */
-  public NetworkServiceException( final String message )
-  {
+  public NetworkServiceException( final String message ) {
     super( message );
   }
 
@@ -47,8 +44,7 @@ public class NetworkServiceException extends Exception
    * @param message
    * @param newNested
    */
-  public NetworkServiceException( final String message, final Throwable newNested )
-  {
+  public NetworkServiceException( final String message, final Throwable newNested ) {
     super( message, newNested );
   }
 
@@ -58,8 +54,7 @@ public class NetworkServiceException extends Exception
   /**
    * @param newNested
    */
-  public NetworkServiceException( final Throwable newNested )
-  {
+  public NetworkServiceException( final Throwable newNested ) {
     super( newNested );
   }
 }

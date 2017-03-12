@@ -54,8 +54,7 @@ import coyote.commons.ByteUtil;
  * +--------+--------+--------+--------+
  * </pre></p>
  */
-public class MessageAddress
-{
+public class MessageAddress {
   /**
    * Return the IP address of the given data
    *
@@ -63,26 +62,17 @@ public class MessageAddress
    * 
    * @return the IP address of the given data
    */
-  public static InetAddress getAddress( final byte[] packetAddr )
-  {
+  public static InetAddress getAddress( final byte[] packetAddr ) {
     InetAddress retval = null;
 
-    if( packetAddr != null )
-    {
-      try
-      {
-        if( packetAddr.length == 12 )
-        {
+    if ( packetAddr != null ) {
+      try {
+        if ( packetAddr.length == 12 ) {
           retval = InetAddress.getByAddress( ByteUtil.subArray( packetAddr, 8, 4 ) );
-        }
-        else if( packetAddr.length == 24 )
-        {
+        } else if ( packetAddr.length == 24 ) {
           retval = InetAddress.getByAddress( ByteUtil.subArray( packetAddr, 8, 16 ) );
         }
-      }
-      catch( final UnknownHostException e )
-      {
-      }
+      } catch ( final UnknownHostException e ) {}
     }
 
     return retval;
@@ -96,10 +86,8 @@ public class MessageAddress
    *
    * @param packetAddr
    */
-  public static int getChannel( final byte[] packetAddr )
-  {
-    if( ( packetAddr != null ) && ( packetAddr.length > 2 ) )
-    {
+  public static int getChannel( final byte[] packetAddr ) {
+    if ( ( packetAddr != null ) && ( packetAddr.length > 2 ) ) {
       return ByteUtil.retrieveShort( packetAddr, 0 );
     }
 
@@ -116,10 +104,8 @@ public class MessageAddress
    *
    * @return the 4-byte unsigned integer value representing the endpoint.
    */
-  public static long getEndPoint( final byte[] packetAddr )
-  {
-    if( ( packetAddr != null ) && ( packetAddr.length > 4 ) )
-    {
+  public static long getEndPoint( final byte[] packetAddr ) {
+    if ( ( packetAddr != null ) && ( packetAddr.length > 4 ) ) {
       return ByteUtil.retrieveUnsignedInt( packetAddr, 2 );
     }
 
@@ -136,10 +122,8 @@ public class MessageAddress
    *
    * @return the IP port
    */
-  public static int getPort( final byte[] packetAddr )
-  {
-    if( ( packetAddr != null ) && ( packetAddr.length > 10 ) )
-    {
+  public static int getPort( final byte[] packetAddr ) {
+    if ( ( packetAddr != null ) && ( packetAddr.length > 10 ) ) {
       return ByteUtil.retrieveUnsignedShort( packetAddr, 6 );
     }
 
@@ -157,19 +141,14 @@ public class MessageAddress
    *
    * @param bytes
    */
-  public MessageAddress( final byte[] bytes )
-  {
-    if( bytes != null )
-    {
+  public MessageAddress( final byte[] bytes ) {
+    if ( bytes != null ) {
       // parse the address
-      if( ( bytes.length == 0 ) || ( bytes.length == 2 ) || ( bytes.length == 6 ) || ( bytes.length == 8 ) || ( bytes.length == 12 ) || ( bytes.length == 24 ) )
-      {
+      if ( ( bytes.length == 0 ) || ( bytes.length == 2 ) || ( bytes.length == 6 ) || ( bytes.length == 8 ) || ( bytes.length == 12 ) || ( bytes.length == 24 ) ) {
         data = new byte[bytes.length];
 
         System.arraycopy( bytes, 0, data, 0, bytes.length );
-      }
-      else
-      {
+      } else {
         throw new IllegalArgumentException( "Data size of " + bytes.length + " does not match that of a valid address" );
       }
     }
@@ -186,21 +165,16 @@ public class MessageAddress
    * @param id The EndPoint identifier Actually an unsigned integer
    * @param channel The channel identifier
    */
-  public MessageAddress( final InetAddress addr, final int port, final long id, final int channel )
-  {
-    if( addr != null )
-    {
-      if( addr instanceof Inet4Address )
-      {
+  public MessageAddress( final InetAddress addr, final int port, final long id, final int channel ) {
+    if ( addr != null ) {
+      if ( addr instanceof Inet4Address ) {
         data = new byte[12];
 
         ByteUtil.overlayUnsignedShort( channel, data, 0 );
         ByteUtil.overlayUnsignedInt( id, data, 2 );
         ByteUtil.overlayUnsignedShort( port, data, 6 );
         System.arraycopy( addr.getAddress(), 0, data, 8, 4 );
-      }
-      else
-      {
+      } else {
         data = new byte[24];
 
         ByteUtil.overlayUnsignedShort( channel, data, 0 );
@@ -208,30 +182,22 @@ public class MessageAddress
         ByteUtil.overlayUnsignedShort( port, data, 6 );
         System.arraycopy( addr.getAddress(), 0, data, 8, 16 );
       }
-    }
-    else if( port > 0 )
-    {
+    } else if ( port > 0 ) {
       data = new byte[8];
 
       ByteUtil.overlayUnsignedShort( channel, data, 0 );
       ByteUtil.overlayUnsignedInt( id, data, 2 );
       ByteUtil.overlayUnsignedShort( port, data, 6 );
-    }
-    else if( id > -1 )
-    {
+    } else if ( id > -1 ) {
       data = new byte[6];
 
       ByteUtil.overlayUnsignedShort( channel, data, 0 );
       ByteUtil.overlayUnsignedInt( id, data, 2 );
-    }
-    else if( channel > -1 )
-    {
+    } else if ( channel > -1 ) {
       data = new byte[2];
 
       ByteUtil.overlayUnsignedShort( channel, data, 0 );
-    }
-    else
-    {
+    } else {
       data = new byte[0];
     }
   }
@@ -245,17 +211,13 @@ public class MessageAddress
    * @param id The EndPoint identifier Actually an unsigned integer
    * @param channel The channel identifier
    */
-  public MessageAddress( final long id, final int channel )
-  {
-    if( ( id > -1 ) && ( channel > -1 ) )
-    {
+  public MessageAddress( final long id, final int channel ) {
+    if ( ( id > -1 ) && ( channel > -1 ) ) {
       data = new byte[6];
 
       ByteUtil.overlayUnsignedShort( channel, data, 0 );
       ByteUtil.overlayUnsignedInt( id, data, 2 );
-    }
-    else
-    {
+    } else {
       data = new byte[0];
     }
   }
@@ -269,19 +231,13 @@ public class MessageAddress
    * @return True if the argument is an MessageAddress representing the same 
    *         point in the infrastructure. 
    */
-  public boolean equals( final Object address )
-  {
-    if( address != null )
-    {
-      if( address instanceof MessageAddress )
-      {
+  public boolean equals( final Object address ) {
+    if ( address != null ) {
+      if ( address instanceof MessageAddress ) {
         final MessageAddress addr = (MessageAddress)address;
-        if( addr.data.length == data.length )
-        {
-          for( int x = 0; x < data.length; x++ )
-          {
-            if( addr.data[x] != data[x] )
-            {
+        if ( addr.data.length == data.length ) {
+          for ( int x = 0; x < data.length; x++ ) {
+            if ( addr.data[x] != data[x] ) {
               return false;
             }
           }
@@ -301,8 +257,7 @@ public class MessageAddress
    *
    * @return the IP address of this MessageAddress
    */
-  public InetAddress getAddress()
-  {
+  public InetAddress getAddress() {
     return MessageAddress.getAddress( data );
   }
 
@@ -312,8 +267,7 @@ public class MessageAddress
   /**
    * Retrieve the address as a byte array.
    */
-  public byte[] getBytes()
-  {
+  public byte[] getBytes() {
     return data;
   }
 
@@ -323,8 +277,7 @@ public class MessageAddress
   /**
    * Return the Channel identifier of this MessageAddress
    */
-  public int getChannelId()
-  {
+  public int getChannelId() {
     return MessageAddress.getChannel( data );
   }
 
@@ -336,8 +289,7 @@ public class MessageAddress
    *
    * @return the 4-byte unsigned integer value representing the endpoint.
    */
-  public long getEndPoint()
-  {
+  public long getEndPoint() {
     return MessageAddress.getEndPoint( data );
   }
 
@@ -347,8 +299,7 @@ public class MessageAddress
   /**
    * Return the IP port of this MessageAddress
    */
-  public int getPort()
-  {
+  public int getPort() {
     return MessageAddress.getPort( data );
   }
 
@@ -358,8 +309,7 @@ public class MessageAddress
   /**
    * Human readable representation of this address
    */
-  public String toString()
-  {
+  public String toString() {
     return new String( "IP:" + getAddress() + ":" + getPort() + " EP:" + getEndPoint() + " Chl:" + getChannelId() );
   }
 

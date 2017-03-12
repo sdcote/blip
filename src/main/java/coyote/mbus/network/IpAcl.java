@@ -23,8 +23,7 @@ import coyote.commons.network.IpNetwork;
 /**
  * Holder for an Access Control list.
  */
-public class IpAcl
-{
+public class IpAcl {
   /** The string representing the ALLOW state. */
   public static final String ALLOW_TAG = "ALLOW";
 
@@ -67,8 +66,7 @@ public class IpAcl
    * <p>The default mode is to ALLOW anything that isn't explicitly blocked by
    * a rule.</p>
    */
-  public IpAcl()
-  {
+  public IpAcl() {
     this( IpAcl.DEFAULT_MODE );
   }
 
@@ -83,8 +81,7 @@ public class IpAcl
    *
    * @param defaultMode the default mode for non-matched checks
    */
-  public IpAcl( final boolean defaultMode )
-  {
+  public IpAcl( final boolean defaultMode ) {
     setDefaultAllow( defaultMode );
   }
 
@@ -114,86 +111,59 @@ public class IpAcl
    *
    * @param rules A semicolon delimited list of rules
    */
-  public void parse( final String rules )
-  {
-    if( acl != null )
-    {
+  public void parse( final String rules ) {
+    if ( acl != null ) {
       // split the String into expression:rule parts
       final StringTokenizer st1 = new StringTokenizer( rules, IpAcl.RULE_DELIM );
 
-      while( st1.hasMoreTokens() )
-      {
+      while ( st1.hasMoreTokens() ) {
         final String token1 = st1.nextToken();
 
         // if it doesn't have a :, it's not the correct format
-        if( token1.indexOf( IpAcl.TOKEN_DELIM ) != -1 )
-        {
+        if ( token1.indexOf( IpAcl.TOKEN_DELIM ) != -1 ) {
           // split into expression and rule part
           final StringTokenizer st2 = new StringTokenizer( token1, IpAcl.TOKEN_DELIM );
           String network = "";
           String rule = "";
 
-          if( st2.hasMoreTokens() )
-          {
+          if ( st2.hasMoreTokens() ) {
             network = st2.nextToken();
-          }
-          else
-          {
+          } else {
             // mall-formed?
             continue;
           }
 
-          if( st2.hasMoreTokens() )
-          {
+          if ( st2.hasMoreTokens() ) {
             rule = st2.nextToken();
-          }
-          else
-          {
+          } else {
             // mall-formed?
             continue;
           }
 
           // check to see what sort of rule
-          if( rule.equalsIgnoreCase( IpAcl.ALLOW_TAG ) )
-          {
+          if ( rule.equalsIgnoreCase( IpAcl.ALLOW_TAG ) ) {
             // case for special 'DEFAULT' expression
-            if( network.equalsIgnoreCase( IpAcl.DEFAULT_TAG ) )
-            {
+            if ( network.equalsIgnoreCase( IpAcl.DEFAULT_TAG ) ) {
               setDefaultAllow( IpAcl.ALLOW );
-            }
-            else
-            {
-              try
-              {
+            } else {
+              try {
                 add( network, IpAcl.ALLOW );
-              }
-              catch( final Exception ipe )
-              {
+              } catch ( final Exception ipe ) {
                 throw new IllegalArgumentException( "Malformed network specification (" + network + ")" );
               }
             }
-          }
-          else if( rule.equalsIgnoreCase( IpAcl.DENY_TAG ) )
-          {
+          } else if ( rule.equalsIgnoreCase( IpAcl.DENY_TAG ) ) {
             // case for special 'DEFAULT' expression
-            if( network.equals( IpAcl.DEFAULT_TAG ) )
-            {
+            if ( network.equals( IpAcl.DEFAULT_TAG ) ) {
               setDefaultAllow( IpAcl.DENY );
-            }
-            else
-            {
-              try
-              {
+            } else {
+              try {
                 add( network, IpAcl.DENY );
-              }
-              catch( final Exception ipe )
-              {
+              } catch ( final Exception ipe ) {
                 throw new IllegalArgumentException( "Malformed network specification (" + network + ")" );
               }
             }
-          }
-          else
-          {
+          } else {
             // if it's not ALLOW or DENY, it's not a proper rule
             throw new IllegalArgumentException( "Invalid access specification (" + rule + ")" );
           }
@@ -209,8 +179,7 @@ public class IpAcl
    * Changes the default allow mode of the ACL. <p>This is what the check will return if it does not find an explict rule to match against.</p>
    * @param allow  The new default mode: True = allow by default, false = deny by default.
    */
-  public synchronized void setDefaultAllow( final boolean allow )
-  {
+  public synchronized void setDefaultAllow( final boolean allow ) {
     defaultAllow = allow;
   }
 
@@ -226,8 +195,7 @@ public class IpAcl
    *
    * @throws IpAddressException if the specified network is not valid.
    */
-  public void add( final String network, final boolean allowed ) throws IpAddressException
-  {
+  public void add( final String network, final boolean allowed ) throws IpAddressException {
     // try and convert the expression into an IP network
     final IpNetwork net = new IpNetwork( network );
 
@@ -244,8 +212,7 @@ public class IpAcl
    * @param allowed wether or not connections from the specified network will be
    *          accepted.
    */
-  public void add( final IpNetwork network, final boolean allowed )
-  {
+  public void add( final IpNetwork network, final boolean allowed ) {
     // create a new rule and add it to the list
     acl.add( new ACLRule( network, allowed ) );
   }
@@ -260,15 +227,10 @@ public class IpAcl
    *
    * @return whether the address was permitted by the ACL
    */
-  public synchronized boolean allows( final InetAddress addr )
-  {
-    try
-    {
+  public synchronized boolean allows( final InetAddress addr ) {
+    try {
       return allows( new IpAddress( addr.getHostAddress() ) );
-    }
-    catch( final Exception e )
-    {
-    }
+    } catch ( final Exception e ) {}
 
     return false;
   }
@@ -284,15 +246,10 @@ public class IpAcl
    *
    * @return whether the address was permitted by the ACL
    */
-  public synchronized boolean allows( final String addr )
-  {
-    try
-    {
+  public synchronized boolean allows( final String addr ) {
+    try {
       return allows( new IpAddress( addr ) );
-    }
-    catch( final Exception e )
-    {
-    }
+    } catch ( final Exception e ) {}
 
     return false;
   }
@@ -307,14 +264,11 @@ public class IpAcl
    *
    * @return whether the address was permitted by the ACL
    */
-  public synchronized boolean allows( final IpAddress addr )
-  {
-    for( int i = 0; i < acl.size(); i++ )
-    {
+  public synchronized boolean allows( final IpAddress addr ) {
+    for ( int i = 0; i < acl.size(); i++ ) {
       final ACLRule rule = (ACLRule)acl.get( i );
 
-      if( rule.network.contains( addr ) )
-      {
+      if ( rule.network.contains( addr ) ) {
         return rule.allows;
       }
     }
@@ -334,10 +288,8 @@ public class IpAcl
    *
    * @param newacl The ACL to append to this list.
    */
-  public synchronized void append( final IpAcl newacl )
-  {
-    for( int i = 0; i < newacl.acl.size(); acl.add( newacl.acl.get( i++ ) ) )
-    {
+  public synchronized void append( final IpAcl newacl ) {
+    for ( int i = 0; i < newacl.acl.size(); acl.add( newacl.acl.get( i++ ) ) ) {
       ;
     }
   }
@@ -348,8 +300,7 @@ public class IpAcl
   /**
    * @return  the name
    */
-  public String getName()
-  {
+  public String getName() {
     return name;
   }
 
@@ -361,43 +312,33 @@ public class IpAcl
    *
    * @return TODO Complete Documentation
    */
-  public String toString()
-  {
+  public String toString() {
     final StringBuffer buffer = new StringBuffer();
 
     buffer.append( IpAcl.DEFAULT_TAG );
     buffer.append( IpAcl.TOKEN_DELIM );
 
-    if( defaultAllow )
-    {
+    if ( defaultAllow ) {
       buffer.append( IpAcl.ALLOW_TAG );
-    }
-    else
-    {
+    } else {
       buffer.append( IpAcl.DENY_TAG );
     }
 
-    if( acl.size() > 0 )
-    {
+    if ( acl.size() > 0 ) {
       buffer.append( IpAcl.RULE_DELIM );
 
-      for( int i = 0; i < acl.size(); i++ )
-      {
+      for ( int i = 0; i < acl.size(); i++ ) {
         final ACLRule rule = (ACLRule)acl.get( i );
         buffer.append( rule.network.toString() );
         buffer.append( IpAcl.TOKEN_DELIM );
 
-        if( rule.allows )
-        {
+        if ( rule.allows ) {
           buffer.append( IpAcl.ALLOW_TAG );
-        }
-        else
-        {
+        } else {
           buffer.append( IpAcl.DENY_TAG );
         }
 
-        if( i + 1 < acl.size() )
-        {
+        if ( i + 1 < acl.size() ) {
           buffer.append( IpAcl.RULE_DELIM );
         }
       }
@@ -413,8 +354,7 @@ public class IpAcl
   /**
    * Wrapper class for an ACL rule.
    */
-  private class ACLRule
-  {
+  private class ACLRule {
 
     /** Field allows */
     boolean allows = true;
@@ -431,8 +371,7 @@ public class IpAcl
      * @param net
      * @param allowed
      */
-    private ACLRule( final IpNetwork net, final boolean allowed )
-    {
+    private ACLRule( final IpNetwork net, final boolean allowed ) {
       network = net;
       allows = allowed;
     }

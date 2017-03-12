@@ -33,8 +33,7 @@ import coyote.mbus.message.MessageAddress;
 * <p>The concept of message addresses to support messaging technologies which
 * support point-to-point messages through addressing.</p>
 */
-public class MessageChannel
-{
+public class MessageChannel {
   public static final String PRIVATE_PREFIX = "PRIVATE.";
 
   /** Our address in the Message network */
@@ -74,9 +73,7 @@ public class MessageChannel
   /**
    * This constructor should be used by the Message system only.
    */
-  public MessageChannel()
-  {
-  }
+  public MessageChannel() {}
 
 
 
@@ -87,8 +84,7 @@ public class MessageChannel
    *
    * @param sink The inbound sink this channel is to use as a call-back.
    */
-  public MessageChannel( final MessageSink sink )
-  {
+  public MessageChannel( final MessageSink sink ) {
     this.inSink = sink;
   }
 
@@ -100,15 +96,12 @@ public class MessageChannel
    *
    * @param listener The MessageChannelListener to be added
    */
-  public synchronized void addListener( final MessageChannelListener listener )
-  {
-    if( channelListeners == null )
-    {
+  public synchronized void addListener( final MessageChannelListener listener ) {
+    if ( channelListeners == null ) {
       channelListeners = new Vector<MessageChannelListener>( 10 );
     }
 
-    if( channelListeners.contains( listener ) )
-    {
+    if ( channelListeners.contains( listener ) ) {
       return;
     }
 
@@ -127,13 +120,12 @@ public class MessageChannel
    * messages in its inbound queue. This means even though the channel is 
    * closed, the messages already in the channel will still be processed.</p>
    */
-  public void close()
-  {
+  public void close() {
     closed = true;
-    
+
     // add a message to the inbound queue indicating the end of the data
     inbound.add( new ClosureMessage() );
-    
+
     // add a message to the outbound queue indicating the end of the data
     outbound.add( new ClosureMessage() );
   }
@@ -151,11 +143,9 @@ public class MessageChannel
    * @return a group name only this channel may join but to which any other may 
    *         send.
    */
-  public String createPrivateGroup()
-  {
+  public String createPrivateGroup() {
     final String retval = MessageChannel.PRIVATE_PREFIX + UUID.randomUUID().toString();
-    synchronized( privateGroupMap )
-    {
+    synchronized( privateGroupMap ) {
       privateGroupMap.add( retval );
     }
     return retval;
@@ -168,15 +158,13 @@ public class MessageChannel
    * Null out the sinks, clear the queues and remove the listeners so resources 
    * can be reclaimed.
    */
-  public void destroy()
-  {
+  public void destroy() {
     closed = true;
     inSink = null;
     outSink = null;
     inbound.clear();
     outbound.clear();
-    if( channelListeners != null )
-    {
+    if ( channelListeners != null ) {
       channelListeners.clear();
     }
   }
@@ -189,29 +177,22 @@ public class MessageChannel
    * 
    * TODO pass inbound and outbound packets to the appropriate components
    */
-  void doWork()
-  {
+  void doWork() {
     //while( !shutdown )
     {
-      if( inSink != null )
-      {
+      if ( inSink != null ) {
         // perform a blocking get on the inbound queue
         final Message packet = getNextInbound();
 
-        if( packet != null )
-        {
-          if( packet instanceof ClosureMessage )
-          {
+        if ( packet != null ) {
+          if ( packet instanceof ClosureMessage ) {
             //restart = false;
             //shutdown = true;
           }
 
-          try
-          {
+          try {
             inSink.onMessage( packet );
-          }
-          catch( final Throwable t )
-          {
+          } catch ( final Throwable t ) {
             t.printStackTrace();
           }
         }
@@ -225,17 +206,13 @@ public class MessageChannel
   /**
    * Let the listeners know that a connection has been made to another channel.
    */
-  void fireConnect()
-  {
-    if( channelListeners != null )
-    {
+  void fireConnect() {
+    if ( channelListeners != null ) {
       final int size = channelListeners.size();
 
-      for( int i = 0; i < size; i++ )
-      {
+      for ( int i = 0; i < size; i++ ) {
         final MessageChannelListener target = (MessageChannelListener)channelListeners.elementAt( i );
-        if( target != null )
-        {
+        if ( target != null ) {
           target.channelConnect( this );
         }
       }
@@ -248,17 +225,13 @@ public class MessageChannel
   /**
    * Let the listeners know that a connection has been lost to another channel.
    */
-  void fireDisconnect()
-  {
-    if( channelListeners != null )
-    {
+  void fireDisconnect() {
+    if ( channelListeners != null ) {
       final int size = channelListeners.size();
 
-      for( int i = 0; i < size; i++ )
-      {
+      for ( int i = 0; i < size; i++ ) {
         final MessageChannelListener target = (MessageChannelListener)channelListeners.elementAt( i );
-        if( target != null )
-        {
+        if ( target != null ) {
           target.channelDisconnect( this );
         }
       }
@@ -273,17 +246,13 @@ public class MessageChannel
    *
    * @param groupName
    */
-  void fireJoin( final String groupName )
-  {
-    if( channelListeners != null )
-    {
+  void fireJoin( final String groupName ) {
+    if ( channelListeners != null ) {
       final int size = channelListeners.size();
 
-      for( int i = 0; i < size; i++ )
-      {
+      for ( int i = 0; i < size; i++ ) {
         final MessageChannelListener target = (MessageChannelListener)channelListeners.elementAt( i );
-        if( target != null )
-        {
+        if ( target != null ) {
           target.channelJoined( groupName, this );
         }
       }
@@ -298,26 +267,19 @@ public class MessageChannel
    *
    * @param groupName
    */
-  void fireLeave( final String groupName )
-  {
-    try
-    {
-      if( channelListeners != null )
-      {
+  void fireLeave( final String groupName ) {
+    try {
+      if ( channelListeners != null ) {
         final int size = channelListeners.size();
 
-        for( int i = 0; i < size; i++ )
-        {
+        for ( int i = 0; i < size; i++ ) {
           final MessageChannelListener target = (MessageChannelListener)channelListeners.elementAt( i );
-          if( target != null )
-          {
+          if ( target != null ) {
             target.channelLeft( groupName, this );
           }
         }
       }
-    }
-    catch( final Exception e )
-    {
+    } catch ( final Exception e ) {
       e.printStackTrace();
     }
   }
@@ -332,17 +294,13 @@ public class MessageChannel
    * <p>This means that an Message is waiting for retrieval with a call to the
    * MessageChannel.get() method.</p>
    */
-  void fireReceive()
-  {
-    if( channelListeners != null )
-    {
+  void fireReceive() {
+    if ( channelListeners != null ) {
       final int size = channelListeners.size();
 
-      for( int i = 0; i < size; i++ )
-      {
+      for ( int i = 0; i < size; i++ ) {
         final MessageChannelListener target = (MessageChannelListener)channelListeners.elementAt( i );
-        if( target != null )
-        {
+        if ( target != null ) {
           target.channelReceive( this );
         }
       }
@@ -356,17 +314,13 @@ public class MessageChannel
    * Inform all channel listeners that a message has been placed in the 
    * outbound message queue for sending.
    */
-  void fireSend()
-  {
-    if( channelListeners != null )
-    {
+  void fireSend() {
+    if ( channelListeners != null ) {
       final int size = channelListeners.size();
 
-      for( int i = 0; i < size; i++ )
-      {
+      for ( int i = 0; i < size; i++ ) {
         final MessageChannelListener target = (MessageChannelListener)channelListeners.elementAt( i );
-        if( target != null )
-        {
+        if ( target != null ) {
           target.channelSend( this );
         }
       }
@@ -379,8 +333,7 @@ public class MessageChannel
   /**
    * @return  The currently set MessageAddress, or null if no address is set.
    */
-  public MessageAddress getAddress()
-  {
+  public MessageAddress getAddress() {
     return address;
   }
 
@@ -391,8 +344,7 @@ public class MessageChannel
    * @return The channel identifier assigned to this channel by the channel
    *         manager.
    */
-  public int getChannelId()
-  {
+  public int getChannelId() {
     return address.getChannelId();
   }
 
@@ -402,8 +354,7 @@ public class MessageChannel
   /**
    * @return  The currently set channel identifier
    */
-  public String getClientId()
-  {
+  public String getClientId() {
     return clientId;
   }
 
@@ -413,8 +364,7 @@ public class MessageChannel
   /**
    * @return a count of the current group names to which this channel has joined.
    */
-  public int getGroupCount()
-  {
+  public int getGroupCount() {
     return groupNames.size();
   }
 
@@ -424,8 +374,7 @@ public class MessageChannel
   /**
    * @return a list of group names to which this channel has joined.
    */
-  public List getGroups()
-  {
+  public List getGroups() {
     return groupNames;
   }
 
@@ -435,8 +384,7 @@ public class MessageChannel
   /**
    * @return  a reference to our inbound packet queue.
    */
-  public MessageQueue getInbound()
-  {
+  public MessageQueue getInbound() {
     return inbound;
   }
 
@@ -446,8 +394,7 @@ public class MessageChannel
   /**
    * @return The currently set MessageSink or null if the inSink is not set
    */
-  public MessageSink getInboundSink()
-  {
+  public MessageSink getInboundSink() {
     return inSink;
   }
 
@@ -462,15 +409,10 @@ public class MessageChannel
    * @return The next Message in the queue or null if the operation was
    *         interrupted.
    */
-  public Message getNextInbound()
-  {
-    try
-    {
+  public Message getNextInbound() {
+    try {
       return inbound.get();
-    }
-    catch( final InterruptedException e )
-    {
-    }
+    } catch ( final InterruptedException e ) {}
 
     return null;
   }
@@ -488,15 +430,10 @@ public class MessageChannel
    * @return The next Message in the queue, or null if the operation was
    *         interrupted or timed-out.
    */
-  public Message getNextInbound( final long millis )
-  {
-    try
-    {
+  public Message getNextInbound( final long millis ) {
+    try {
       return inbound.get( millis );
-    }
-    catch( final InterruptedException e )
-    {
-    }
+    } catch ( final InterruptedException e ) {}
 
     return null;
   }
@@ -512,15 +449,10 @@ public class MessageChannel
    * @return The next Message in the queue or null if the operation was
    *         interrupted.
    */
-  public Message getNextOutbound()
-  {
-    try
-    {
+  public Message getNextOutbound() {
+    try {
       return outbound.get();
-    }
-    catch( final InterruptedException e )
-    {
-    }
+    } catch ( final InterruptedException e ) {}
 
     return null;
   }
@@ -534,19 +466,14 @@ public class MessageChannel
    * <p>Block for time-out if there are no Packets to get.</p>
    *
    * @param millis the time to wait for a Message
-
+  
    * @return The next Message in the queue, or null if the operation was
    *         interrupted or timed-out.
    */
-  public Message getNextOutbound( final long millis )
-  {
-    try
-    {
+  public Message getNextOutbound( final long millis ) {
+    try {
       return outbound.get( millis );
-    }
-    catch( final InterruptedException e )
-    {
-    }
+    } catch ( final InterruptedException e ) {}
 
     return null;
   }
@@ -557,8 +484,7 @@ public class MessageChannel
   /**
    * @return  a reference to our outbound packet queue.
    */
-  public MessageQueue getOutbound()
-  {
+  public MessageQueue getOutbound() {
     return outbound;
   }
 
@@ -570,8 +496,7 @@ public class MessageChannel
    *
    * @return TODO Complete Documentation
    */
-  public boolean hasInboundPackets()
-  {
+  public boolean hasInboundPackets() {
     return ( inbound.size() > 0 );
   }
 
@@ -583,8 +508,7 @@ public class MessageChannel
    *
    * @return TODO Complete Documentation
    */
-  public boolean hasOutboundPackets()
-  {
+  public boolean hasOutboundPackets() {
     return ( outbound.size() > 0 );
   }
 
@@ -596,8 +520,7 @@ public class MessageChannel
    *
    * @return TODO Complete Documentation
    */
-  public int inboundDepth()
-  {
+  public int inboundDepth() {
     return inbound.size();
   }
 
@@ -607,8 +530,7 @@ public class MessageChannel
   /**
    * @return  true if the channel will not send / pass packets.
    */
-  public boolean isClosed()
-  {
+  public boolean isClosed() {
     return closed;
   }
 
@@ -620,18 +542,13 @@ public class MessageChannel
    *
    * @param group The name of the group to which this channel is to join.
    */
-  public void join( final String group )
-  {
-    if( ( group != null ) && ( group.trim().length() > 0 ) )
-    {
+  public void join( final String group ) {
+    if ( ( group != null ) && ( group.trim().length() > 0 ) ) {
       // Check for private groups
-      if( group.startsWith( MessageChannel.PRIVATE_PREFIX ) )
-      {
-        synchronized( privateGroupMap )
-        {
+      if ( group.startsWith( MessageChannel.PRIVATE_PREFIX ) ) {
+        synchronized( privateGroupMap ) {
           // If it is not in our list of private groups throw an exception
-          if( !privateGroupMap.contains( group ) )
-          {
+          if ( !privateGroupMap.contains( group ) ) {
             throw new IllegalArgumentException( "Can not subscribe to private group" );
           }
         }
@@ -643,8 +560,7 @@ public class MessageChannel
 
       // add the group name (in the form of a segment filter) to the list of 
       // groups in which this channel is interested.
-      synchronized( groupNames )
-      {
+      synchronized( groupNames ) {
         groupNames.add( filter );
         fireJoin( group );
       }
@@ -662,20 +578,14 @@ public class MessageChannel
    * @param group The name of the channelName from which this channel is to
    *          unsubscribe.
    */
-  public void leave( final String group )
-  {
-    try
-    {
-      if( ( group != null ) && ( group.trim().length() > 0 ) )
-      {
-        synchronized( groupNames )
-        {
-          for( int i = 0; i < group.length(); i++ )
-          {
+  public void leave( final String group ) {
+    try {
+      if ( ( group != null ) && ( group.trim().length() > 0 ) ) {
+        synchronized( groupNames ) {
+          for ( int i = 0; i < group.length(); i++ ) {
             final SegmentFilter filter = (SegmentFilter)groupNames.get( i );
 
-            if( filter.toString().equals( group ) )
-            {
+            if ( filter.toString().equals( group ) ) {
               groupNames.remove( i );
               fireLeave( group );
               return;
@@ -683,10 +593,7 @@ public class MessageChannel
           }
         }
       }
-    }
-    catch( final Exception e )
-    {
-    }
+    } catch ( final Exception e ) {}
   }
 
 
@@ -697,18 +604,14 @@ public class MessageChannel
    * they have on the merit of the packets group name.
    *
    * @param group The name of the group against which to check.
-
+  
    * @return True if this channel is a member of the given group name, false
    *         otherwise.
    */
-  public boolean matchGroup( final String group )
-  {
-    synchronized( groupNames )
-    {
-      for( int i = 0; i < groupNames.size(); i++ )
-      {
-        if( groupNames.get( i ).matches( group ) )
-        {
+  public boolean matchGroup( final String group ) {
+    synchronized( groupNames ) {
+      for ( int i = 0; i < groupNames.size(); i++ ) {
+        if ( groupNames.get( i ).matches( group ) ) {
           return true;
         }
       }
@@ -722,8 +625,7 @@ public class MessageChannel
   /**
    * @return The number of packets waiting in our outbound packet queue.
    */
-  public int outboundDepth()
-  {
+  public int outboundDepth() {
     return outbound.size();
   }
 
@@ -735,8 +637,7 @@ public class MessageChannel
    *
    * @param packet
    */
-  public void put( final Message packet )
-  {
+  public void put( final Message packet ) {
     outbound.add( packet );
   }
 
@@ -754,17 +655,12 @@ public class MessageChannel
    *
    * @param packet The packet that is to be received by the channel.
    */
-  public void receive( final Message packet )
-  {
-    if( packet != null )
-    {
-      if( inSink != null )
-      {
+  public void receive( final Message packet ) {
+    if ( packet != null ) {
+      if ( inSink != null ) {
         // pass this directly to the processor
         inSink.onMessage( packet );
-      }
-      else
-      {
+      } else {
         // notify listeners that a packet has been queued and needs attention
         inbound.add( packet );
       }
@@ -782,10 +678,8 @@ public class MessageChannel
    *
    * @param listener The MessageChannelListener to be removed
    */
-  public synchronized void removeListener( final MessageChannelListener listener )
-  {
-    if( channelListeners == null )
-    {
+  public synchronized void removeListener( final MessageChannelListener listener ) {
+    if ( channelListeners == null ) {
       return;
     }
 
@@ -800,32 +694,24 @@ public class MessageChannel
    *
    * @param msg The message to send.
    */
-  public void send( final Message msg )
-  {
-    if( !closed )
-    {
-      if( msg != null )
-      {
+  public void send( final Message msg ) {
+    if ( !closed ) {
+      if ( msg != null ) {
         // make sure this packet does not get routed back to this channel
-        if( msg.sourceChannel == null )
-        {
+        if ( msg.sourceChannel == null ) {
           msg.sourceChannel = this;
         }
 
         // make sure all packets have a source address
-        if( msg.getSource() == null )
-        {
+        if ( msg.getSource() == null ) {
           msg.setSource( address );
         }
 
         // If there is an outbound sink, pass the message to it
-        if( outSink != null )
-        {
+        if ( outSink != null ) {
           // pass this directly to the processor
           outSink.onMessage( msg );
-        }
-        else
-        {
+        } else {
           // add the message to out outbound queue
           outbound.add( msg );
         }
@@ -844,8 +730,7 @@ public class MessageChannel
   /**
    * @param address  The reference to the MessageAddress to set.
    */
-  public void setAddress( final MessageAddress address )
-  {
+  public void setAddress( final MessageAddress address ) {
     this.address = address;
   }
 
@@ -861,14 +746,10 @@ public class MessageChannel
    *
    * @param i the channel identifier to set in the channel.
    */
-  public void setChannelId( final int i )
-  {
-    if( address != null )
-    {
+  public void setChannelId( final int i ) {
+    if ( address != null ) {
       address = new MessageAddress( address.getAddress(), address.getPort(), address.getEndPoint(), i );
-    }
-    else
-    {
+    } else {
       address = new MessageAddress( -1, i );
     }
   }
@@ -879,8 +760,7 @@ public class MessageChannel
   /**
    * @param string  The identifier to set in this packet channel.
    */
-  public void setClientId( final String string )
-  {
+  public void setClientId( final String string ) {
     clientId = string;
   }
 
@@ -888,10 +768,9 @@ public class MessageChannel
 
 
   /**
-   * @param inSink The reference to the MessageSink to set.
+   * @param sink The reference to the MessageSink to set.
    */
-  public void setInboundSink( final MessageSink sink )
-  {
+  public void setInboundSink( final MessageSink sink ) {
     this.inSink = sink;
   }
 
@@ -901,19 +780,16 @@ public class MessageChannel
   /**
    * @return Nice, informative string representation of the channel.
    */
-  public String toString()
-  {
+  public String toString() {
     final StringBuffer buf = new StringBuffer();
     buf.append( "Channel:" );
     buf.append( address.getChannelId() );
     buf.append( " subs[" );
     buf.append( groupNames.size() );
     buf.append( "]:(" );
-    for( int i = 0; i < groupNames.size(); i++ )
-    {
+    for ( int i = 0; i < groupNames.size(); i++ ) {
       buf.append( ( groupNames.get( i ) ).toString() );
-      if( i + 1 < groupNames.size() )
-      {
+      if ( i + 1 < groupNames.size() ) {
         buf.append( ',' );
       }
     }
@@ -928,29 +804,22 @@ public class MessageChannel
     buf.append( "]" );
 
     // Check to see if there are any channel listeners
-    if( channelListeners != null )
-    {
+    if ( channelListeners != null ) {
       buf.append( " listeners=" );
       buf.append( channelListeners.size() );
     }
 
     buf.append( " inSink:" );
-    if( inSink != null )
-    {
+    if ( inSink != null ) {
       buf.append( inSink );
-    }
-    else
-    {
+    } else {
       buf.append( "null" );
     }
 
     buf.append( " outSink:" );
-    if( outSink != null )
-    {
+    if ( outSink != null ) {
       buf.append( outSink );
-    }
-    else
-    {
+    } else {
       buf.append( "null" );
     }
 

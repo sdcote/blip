@@ -14,7 +14,6 @@ package coyote.mbus.network;
 import coyote.mbus.message.Message;
 
 
-
 /**
  * This class models a message that contains data related to Operations, 
  * Administration or Monitoring (OAM) in ADMIN messages of the MicroBus. 
@@ -22,8 +21,7 @@ import coyote.mbus.message.Message;
  * <p>All OAM messages have an action parameter. This parameter essentially 
  * defines the type of OAM message it is.</p>
  */
-public class OamMessage
-{
+public class OamMessage {
   /** Tag used in various class identifying locations */
   static final String CLASS_TAG = "OAM";
 
@@ -90,8 +88,7 @@ public class OamMessage
    *
    * @param message The Message to use as the source of our data.
    */
-  OamMessage( final Message message )
-  {
+  OamMessage( final Message message ) {
     super();
 
     _msg = (Message)message.clone();
@@ -106,8 +103,7 @@ public class OamMessage
    *
    * @return TODO Complete Documentation
    */
-  String toXML()
-  {
+  String toXML() {
     return _msg.toXml();
   }
 
@@ -119,9 +115,7 @@ public class OamMessage
    *
    * @param action
    */
-  void setAction( final String action )
-  {
-  }
+  void setAction( final String action ) {}
 
 
 
@@ -129,8 +123,7 @@ public class OamMessage
   /**
    * @return the action of this OAM.
    */
-  String getAction()
-  {
+  String getAction() {
     return _msg.getAsString( OamMessage.ACTION );
   }
 
@@ -148,8 +141,7 @@ public class OamMessage
    *
    * @return the identifier if it is set, null if it has not been set.
    */
-  static String getCorrelationId( final Message message )
-  {
+  static String getCorrelationId( final Message message ) {
     return message.getField( OamMessage.OAMID ).getObjectValue().toString();
   }
 
@@ -161,8 +153,7 @@ public class OamMessage
    *
    * @return TODO Complete Documentation
    */
-  String getCorrelationId()
-  {
+  String getCorrelationId() {
     return _msg.getAsString( OamMessage.OAMID );
   }
 
@@ -174,8 +165,7 @@ public class OamMessage
    *
    * @return TODO Complete Documentation
    */
-  String getTcpAddress()
-  {
+  String getTcpAddress() {
     return _msg.getAsString( OamMessage.TCPADR );
   }
 
@@ -187,8 +177,7 @@ public class OamMessage
    *
    * @return TODO Complete Documentation
    */
-  String getTcpPort()
-  {
+  String getTcpPort() {
     return _msg.getAsString( OamMessage.TCPPRT );
   }
 
@@ -200,8 +189,7 @@ public class OamMessage
    *
    * @return TODO Complete Documentation
    */
-  String getEndPoint()
-  {
+  String getEndPoint() {
     return _msg.getAsString( OamMessage.ENDPOINT );
   }
 
@@ -213,8 +201,7 @@ public class OamMessage
    *
    * @return TODO Complete Documentation
    */
-  String getToken()
-  {
+  String getToken() {
     return _msg.getAsString( OamMessage.TOKEN );
   }
 
@@ -228,8 +215,7 @@ public class OamMessage
    *
    * @return The value of the named field, or null if the field does not exist.
    */
-  String get( final String name )
-  {
+  String get( final String name ) {
     return _msg.getAsString( name );
   }
 
@@ -242,10 +228,8 @@ public class OamMessage
    * @param name The name of the field to set.
    * @param value The value to set in that named field.
    */
-  void set( final String name, final String value )
-  {
-    if( name != null )
-    {
+  void set( final String name, final String value ) {
+    if ( name != null ) {
       _msg.put( name, value );
     }
   }
@@ -256,8 +240,7 @@ public class OamMessage
   /**
    * @return TODO Complete Documentation
    */
-  Message getOriginalPacket()
-  {
+  Message getOriginalPacket() {
     return _msg;
   }
 
@@ -268,8 +251,7 @@ public class OamMessage
    * Method getNextId
    * @return TODO Complete Documentation
    */
-  private synchronized static long getNextId()
-  {
+  private synchronized static long getNextId() {
     return OamMessage.nextId++;
   }
 
@@ -281,8 +263,7 @@ public class OamMessage
    *
    * @return TODO Complete Documentation
    */
-  boolean isHeartbeat()
-  {
+  boolean isHeartbeat() {
     return OamMessage.HEARTBEAT.equals( _msg.getAsString( OamMessage.ACTION ) );
   }
 
@@ -297,8 +278,7 @@ public class OamMessage
    *
    * @return TODO Complete Documentation
    */
-  static Message createHeartbeatMessage( final String addr, final int port )
-  {
+  static Message createHeartbeatMessage( final String addr, final int port ) {
     final Message message = new Message();
     message.add( OamMessage.ACTION, OamMessage.HEARTBEAT );
     message.add( OamMessage.TCPADR, addr );
@@ -318,8 +298,7 @@ public class OamMessage
    *
    * @return A message suitable for use as an insertion message.
    */
-  static Message createInsertionMessage( final String endpoint, final String token )
-  {
+  static Message createInsertionMessage( final String endpoint, final String token ) {
     final Message message = new Message();
     message.add( OamMessage.ACTION, OamMessage.INSERT );
     message.add( OamMessage.ENDPOINT, endpoint );
@@ -338,8 +317,7 @@ public class OamMessage
    *
    * @return A message suitable for use as a withdrawal message.
    */
-  static Message createWithdrawalMessage( final String endpoint )
-  {
+  static Message createWithdrawalMessage( final String endpoint ) {
     final Message message = new Message();
     message.add( OamMessage.ACTION, OamMessage.WITHDRAW );
     message.add( OamMessage.ENDPOINT, endpoint );
@@ -357,8 +335,7 @@ public class OamMessage
    *
    * @return A message suitable for use as a join message.
    */
-  static Message createJoinMessage( final String group )
-  {
+  static Message createJoinMessage( final String group ) {
     final Message message = new Message();
     message.add( OamMessage.ACTION, OamMessage.JOIN );
     message.add( OamMessage.GROUP, group );
@@ -376,8 +353,7 @@ public class OamMessage
    *
    * @return A message suitable for use as a leave message.
    */
-  static Message createLeaveMessage( final String group )
-  {
+  static Message createLeaveMessage( final String group ) {
     final Message message = new Message();
     message.add( OamMessage.ACTION, OamMessage.LEAVE );
     message.add( OamMessage.GROUP, group );
@@ -387,8 +363,7 @@ public class OamMessage
 
 
 
-  static Message createArpMessage( final String sip, final long sep, final long token, final String dip, final long dep )
-  {
+  static Message createArpMessage( final String sip, final long sep, final long token, final String dip, final long dep ) {
     final Message message = new Message();
     message.add( OamMessage.ACTION, OamMessage.ARP );
     message.add( OamMessage.SOURCE_ADDRESS, sip );
@@ -409,11 +384,9 @@ public class OamMessage
    * 
    * @return The message representing the node.
    */
-  public static Message createNodePacket( final RemoteNode node )
-  {
+  public static Message createNodePacket( final RemoteNode node ) {
     final Message message = new Message();
-    if( node.udpAddress != null )
-    {
+    if ( node.udpAddress != null ) {
       message.add( OamMessage.NODE_ADDRESS, node.udpAddress.getHostAddress() );
     }
     message.add( OamMessage.NODE_PORT, node.tcpPort );

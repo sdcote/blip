@@ -31,8 +31,7 @@ import coyote.mbus.network.Packet;
  * 
  * <p>This utility is helpful in trouble shooting messaging issues.</p>
  */
-public class BusListener implements Runnable
-{
+public class BusListener implements Runnable {
   private static final String CLASS_TAG = "BusListener";
   private static final String LF = System.getProperty( "line.separator" );
   private static final SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss.SSS" );
@@ -50,25 +49,17 @@ public class BusListener implements Runnable
 
 
 
-  public BusListener( final String[] args )
-  {
+  public BusListener( final String[] args ) {
     // Add a shutdown hook into the JVM to help us shut everything down nicely
-    try
-    {
-      Runtime.getRuntime().addShutdownHook( new Thread( "MicroBusShutdown" )
-      {
-        public void run()
-        {
-          synchronized( BusListener.CLASS_TAG )
-          {
+    try {
+      Runtime.getRuntime().addShutdownHook( new Thread( "MicroBusShutdown" ) {
+        public void run() {
+          synchronized( BusListener.CLASS_TAG ) {
             BusListener.shutdown();
           }
         }
       } );
-    }
-    catch( final Throwable ignoree )
-    {
-    }
+    } catch ( final Throwable ignoree ) {}
 
     parseArgs( args );
   }
@@ -76,8 +67,7 @@ public class BusListener implements Runnable
 
 
 
-  private static void usage( final String message )
-  {
+  private static void usage( final String message ) {
     System.err.println( System.getProperty( "line.separator" ) + message );
     System.err.println( System.getProperty( "line.separator" ) + "Usage: java -jar buslistener.jar [-h][-i][-p]" );
     System.err.println( "  -h\tthis screen" );
@@ -96,57 +86,38 @@ public class BusListener implements Runnable
    *
    * @param args
    */
-  private void parseArgs( final String[] args )
-  {
+  private void parseArgs( final String[] args ) {
     int i = 0;
 
-    while( i < args.length )
-    {
-      if( args[i].equals( "-h" ) )
-      {
+    while ( i < args.length ) {
+      if ( args[i].equals( "-h" ) ) {
         BusListener.usage( "This utility listens to packets on the network and parses those packets into\nmessages. The output can be used to verify messages are actually being seen\non the bus and are available to other nodes." );
-      }
-      else if( args[i].equals( "-d" ) )
-      {
+      } else if ( args[i].equals( "-d" ) ) {
         debug = true;
       }
       // Component Identifier
-      else if( args[i].equals( "-p" ) )
-      {
-        if( args.length > ( i + 1 ) )
-        {
+      else if ( args[i].equals( "-p" ) ) {
+        if ( args.length > ( i + 1 ) ) {
           i++;
           port = Integer.parseInt( args[i] );
           System.out.println( "Using port " + port );
-        }
-        else
-        {
+        } else {
           BusListener.usage( "Port flag (-p) requires additional parameter - exiting" );
         }
-      }
-      else if( args[i].equals( "-i" ) )
-      {
-        if( args.length > ( i + 1 ) )
-        {
+      } else if ( args[i].equals( "-i" ) ) {
+        if ( args.length > ( i + 1 ) ) {
           i++;
-          try
-          {
+          try {
             host = InetAddress.getByName( args[i] );
             System.out.println( "Using host " + host.getHostAddress() );
-          }
-          catch( final UnknownHostException e )
-          {
+          } catch ( final UnknownHostException e ) {
             System.err.println( "Could not resolve host IP of " + args[i] + " - exiting" );
             System.exit( 1 );
           }
-        }
-        else
-        {
+        } else {
           BusListener.usage( "IP flag (-i) requires additional parameter - exiting" );
         }
-      }
-      else
-      {
+      } else {
         BusListener.usage( "Unknown argument '" + args[i] + "'" );
       }
 
@@ -154,8 +125,7 @@ public class BusListener implements Runnable
       i++;
     }
 
-    if( debug )
-    {
+    if ( debug ) {
       System.out.println( "Debug messages enabled" );
     }
   }
@@ -163,29 +133,23 @@ public class BusListener implements Runnable
 
 
 
-  public static void shutdown()
-  {
+  public static void shutdown() {
     BusListener.shutdown = true;
   }
 
 
 
 
-  public void run()
-  {
-    if( host == null )
-    {
+  public void run() {
+    if ( host == null ) {
       // set things up
-      try
-      {
+      try {
         // host = InetAddress.getLocalHost();
         // host = IpAddress.getLocalAddress().toInetAddress();
         host = IpInterface.getPrimary().getAddress().toInetAddress();
 
         System.out.println( "Detected primary interface: " + IpInterface.getPrimary() );
-      }
-      catch( final Exception e1 )
-      {
+      } catch ( final Exception e1 ) {
         BusListener.usage( e1.getLocalizedMessage() + " - exiting" );
       }
     }
@@ -196,27 +160,21 @@ public class BusListener implements Runnable
 
     buffer = ByteBuffer.allocate( BusListener.DATAGRAM_MTU );
 
-    try
-    {
+    try {
       // Open a datagram channel so we can get an unbound Datagram Socket
       channel = DatagramChannel.open();
       channel.socket().setBroadcast( true );
       channel.socket().setReceiveBufferSize( BusListener.DATAGRAM_RECEIVE_BUFFER_SIZE );
       channel.socket().setReuseAddress( true );
       channel.socket().setSoTimeout( 500 );
-    }
-    catch( final Exception e1 )
-    {
+    } catch ( final Exception e1 ) {
       BusListener.usage( e1.getLocalizedMessage() );
     }
 
-    try
-    {
+    try {
       System.out.println( "Sniffer binding to " + sa );
       channel.socket().bind( sa );
-    }
-    catch( final SocketException e1 )
-    {
+    } catch ( final SocketException e1 ) {
       BusListener.usage( e1.getLocalizedMessage() );
     }
 
@@ -225,23 +183,18 @@ public class BusListener implements Runnable
     byte[] data;
     Packet frame = null;
 
-    while( !BusListener.shutdown )
-    {
-      try
-      {
-        while( ( address = (InetSocketAddress)channel.receive( buffer ) ) != null )
-        {
+    while ( !BusListener.shutdown ) {
+      try {
+        while ( ( address = (InetSocketAddress)channel.receive( buffer ) ) != null ) {
           buffer.flip();
 
-          if( buffer.remaining() > 0 )
-          {
+          if ( buffer.remaining() > 0 ) {
             data = new byte[buffer.remaining()]; // allocate a byte array
 
             buffer.get( data ); // copy the data into the buffer
             buffer.clear(); // clear out the buffer
 
-            try
-            {
+            try {
               frame = new Packet( data );
               counter++;
 
@@ -249,14 +202,11 @@ public class BusListener implements Runnable
               frame.remotePort = address.getPort();
 
               System.out.println( BusListener.DATE_FORMATTER.format( new Date() ) + "  len=" + data.length + "  frame=" + frame.getTypeName() + BusListener.LF + address + " (" + address.getHostName() + ")" );
-              if( frame.message != null )
-              {
+              if ( frame.message != null ) {
                 System.out.println( frame.message.toString() );
                 System.out.println();
               }
-            }
-            catch( final Exception e )
-            {
+            } catch ( final Exception e ) {
               System.err.println( e.getMessage() );
               e.printStackTrace();
             }
@@ -264,9 +214,7 @@ public class BusListener implements Runnable
 
         } // while
 
-      }
-      catch( final Exception e )
-      {
+      } catch ( final Exception e ) {
         System.err.println( e.getMessage() );
         e.printStackTrace();
       }
@@ -275,13 +223,9 @@ public class BusListener implements Runnable
 
     // tear things down
 
-    try
-    {
+    try {
       channel.close();
-    }
-    catch( final Exception ignore )
-    {
-    }
+    } catch ( final Exception ignore ) {}
 
     System.out.println( "Shutting down after observing " + counter + " frames" );
   }
@@ -292,8 +236,7 @@ public class BusListener implements Runnable
   /**
    * @param args
    */
-  public static void main( final String[] args )
-  {
+  public static void main( final String[] args ) {
     new BusListener( args ).run();
   }
 

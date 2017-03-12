@@ -28,8 +28,7 @@ import java.nio.channels.spi.AbstractSelectableChannel;
  * SelectionKey via the <code>attach()</code> method. The NetworkService will 
  * then call that SelectionKeyHandlers methods.</p>
  */
-public interface NetworkServiceHandler
-{
+public interface NetworkServiceHandler {
 
   /**
    * Give the handler a chance to perform some processing prior to operation.
